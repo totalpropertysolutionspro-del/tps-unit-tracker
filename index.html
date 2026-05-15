@@ -920,10 +920,8 @@ textarea.form-ctrl { resize: none; height: 76px; font-size: 14px; }
 ═══════════════════════════════════════════════════════ */
 
 // ── CONSTANTS ─────────────────────────────────────────
-const STORAGE_KEY = 'tps_tracker_v2';
+const STORAGE_KEY = 'tps_tracker_v3';
 const FLOORS      = [4, 5, 6];
-const UNITS_START = 1;
-const UNITS_END   = 20; // 401-420 per floor
 
 const STATUS_META = {
   not_started: { label: 'Not Started', short: 'NS',  emoji: '🔴' },
@@ -931,25 +929,102 @@ const STATUS_META = {
   done:         { label: 'Done',        short: '✓',   emoji: '🟢' }
 };
 
+// ── REAL UNIT DATA — THE CODA (Make-Ready PDF, Apr 29 2026) ──────────────
+// [unitId, type, moveIn]  moveIn = '' when not yet scheduled
+const CODA_UNIT_DATA = {
+  '4': [
+    ['401.A','1-BED',''],      ['405.A','2-BED','7/23'],  ['405.B','2-BED','7/23'],
+    ['409.A','STUDIO','8/1'],  ['412.A','3-BED',''],      ['412.B','3-BED',''],
+    ['412.C','3-BED',''],      ['413.A','2-BED','7/23'],  ['413.B','2-BED','7/23'],
+    ['415.A','STUDIO','7/23'], ['416.A','2-BED','8/1'],   ['416.B','2-BED','8/1'],
+    ['418.A','2-BED','8/15'],  ['418.B','2-BED','8/15'],  ['419.A','1-BED','8/1'],
+    ['420.A','STUDIO','6/15'], ['421.A','STUDIO','8/1'],  ['422.A','2-BED',''],
+    ['422.B','2-BED',''],      ['423.A','1-BED','8/1'],   ['424.A','STUDIO',''],
+    ['426.A','2-BED','8/1'],   ['426.B','2-BED','8/1'],   ['427.A','1-BED','8/1'],
+    ['428.A','2-BED','8/1'],   ['428.B','2-BED','8/1'],   ['429.A','STUDIO','8/1'],
+    ['430.A','2-BED','8/1'],   ['430.B','2-BED','8/1'],   ['432.A','2-BED','8/1'],
+    ['432.B','2-BED','8/1'],   ['433.A','STUDIO','8/15'], ['434.A','1-BED','8/1'],
+    ['436.A','STUDIO','8/1'],  ['437.A','2-BED','8/1'],   ['437.B','2-BED','8/1'],
+    ['438.A','1-BED','8/1'],   ['440.A','1-BED','8/1'],   ['442.A','STUDIO','8/1'],
+    ['443.A','STUDIO','8/1'],  ['445.A','1-BED','8/1'],   ['447.A','STUDIO','8/1'],
+    ['449.A','1-BED','8/1'],   ['453.A','1-BED','8/15'],  ['455.A','STUDIO','8/15'],
+    ['459.A','STUDIO','8/1'],  ['465.A','3-BED',''],      ['465.B','3-BED',''],
+    ['465.C','3-BED','']
+  ],
+  '5': [
+    ['501.A','1-BED','8/1'],   ['507.A','1-BED','8/15'],  ['509.A','STUDIO','7/23'],
+    ['511.A','STUDIO','8/1'],  ['512.A','3-BED',''],      ['512.B','3-BED',''],
+    ['512.C','3-BED',''],      ['513.A','2-BED',''],      ['515.A','STUDIO','8/8'],
+    ['516.A','2-BED','8/1'],   ['516.B','2-BED','8/1'],   ['517.A','1-BED','8/1'],
+    ['518.A','2-BED','8/1'],   ['518.B','2-BED','8/1'],   ['519.A','1-BED','5/15'],
+    ['521.A','STUDIO','8/1'],  ['523.A','1-BED','5/16'],  ['524.A','STUDIO','8/1'],
+    ['526.A','2-BED','7/23'],  ['526.B','2-BED','7/23'],  ['527.A','1-BED','8/1'],
+    ['528.A','2-BED','8/1'],   ['528.B','2-BED','8/1'],   ['530.B','2-BED','8/1'],
+    ['532.A','2-BED','5/15'],  ['532.B','2-BED','5/15'],  ['533.A','STUDIO','8/1'],
+    ['534.A','1-BED','7/23'],  ['535.A','1-BED','7/23'],  ['537.A','2-BED',''],
+    ['537.B','2-BED',''],      ['539.A','STUDIO','8/1'],  ['540.A','1-BED','5/15'],
+    ['541.A','1-BED','5/18'],  ['542.A','STUDIO','7/23'], ['543.A','STUDIO','8/1'],
+    ['545.A','1-BED','8/1'],   ['546.A','STUDIO','8/1'],  ['547.A','STUDIO','7/28'],
+    ['549.A','1-BED','7/28'],  ['551.A','2-BED','8/1'],   ['551.B','2-BED','8/15'],
+    ['555.A','STUDIO','7/24'], ['561.A','1-BED',''],      ['565.A','3-BED','8/1'],
+    ['565.B','3-BED','8/1'],   ['565.C','3-BED','8/1']
+  ],
+  '6': [
+    ['601.A','1-BED','8/1'],   ['603.A','STUDIO',''],     ['605.A','2-BED','8/1'],
+    ['605.B','2-BED','8/1'],   ['607.A','1-BED',''],      ['609.A','STUDIO',''],
+    ['611.A','STUDIO','8/1'],  ['612.A','3-BED',''],      ['612.B','3-BED',''],
+    ['612.C','3-BED',''],      ['615.A','STUDIO',''],     ['616.A','2-BED',''],
+    ['616.B','2-BED',''],      ['618.A','2-BED',''],      ['618.B','2-BED',''],
+    ['619.A','1-BED','7/23'],  ['620.A','STUDIO',''],     ['621.A','STUDIO','8/1'],
+    ['622.A','2-BED',''],      ['622.B','2-BED',''],      ['623.A','1-BED','8/15'],
+    ['624.A','STUDIO',''],     ['625.A','1-BED','8/1'],   ['626.A','2-BED',''],
+    ['626.B','2-BED',''],      ['627.A','1-BED','8/8'],   ['628.A','2-BED',''],
+    ['628.B','2-BED',''],      ['629.A','STUDIO','8/1'],  ['630.A','2-BED',''],
+    ['630.B','2-BED',''],      ['631.A','STUDIO','7/23'], ['632.A','2-BED',''],
+    ['632.B','2-BED',''],      ['633.A','STUDIO','7/15'], ['634.A','1-BED','6/1'],
+    ['635.A','1-BED',''],      ['636.A','STUDIO','8/1'],  ['637.A','2-BED',''],
+    ['637.B','2-BED',''],      ['640.A','1-BED','7/25'],  ['641.A','1-BED','5/18'],
+    ['642.A','STUDIO',''],     ['643.A','STUDIO',''],     ['644.A','2-BED',''],
+    ['644.B','2-BED',''],      ['645.A','1-BED','6/15'],  ['646.A','STUDIO',''],
+    ['647.A','STUDIO','5/15'], ['651.A','2-BED',''],      ['651.B','2-BED',''],
+    ['653.A','1-BED','6/15'],  ['659.A','STUDIO',''],     ['663.A','1-BED','7/1'],
+    ['665.A','3-BED',''],      ['665.B','3-BED',''],      ['665.C','3-BED','']
+  ]
+};
+
 // ── DEFAULT DATA FACTORY ──────────────────────────────
-function makeUnits(floorNum, defaultPrice) {
+function makeCodaUnits(floorNum, defaultPrice) {
   const units = {};
-  for (let i = UNITS_START; i <= UNITS_END; i++) {
-    const id = `${floorNum}${String(i).padStart(2, '0')}`;
-    units[id] = { status: 'not_started', worker: null, dateDone: null, price: defaultPrice, notes: '' };
+  for (const [uid, type, moveIn] of (CODA_UNIT_DATA[String(floorNum)] || [])) {
+    units[uid] = { status: 'not_started', worker: null, dateDone: null, price: defaultPrice, notes: '', type, moveIn };
   }
   return units;
 }
 
+function makeMayflowerUnits(defaultPrice) {
+  // Placeholder — will be replaced with real data once PDF is uploaded
+  return {
+    'PENDING': {
+      status: 'not_started', worker: null, dateDone: null,
+      price: defaultPrice, notes: 'Upload Mayflower make-ready PDF to get real unit list.',
+      type: 'TBD', moveIn: ''
+    }
+  };
+}
+
 function makeProperty(id, name, color, dimColor, glowColor, defaultPrice) {
   const floors = {};
-  for (const f of FLOORS) floors[String(f)] = makeUnits(f, defaultPrice);
+  for (const f of FLOORS) {
+    floors[String(f)] = id === 'coda'
+      ? makeCodaUnits(f, defaultPrice)
+      : makeMayflowerUnits(defaultPrice);
+  }
   return { id, name, color, dimColor, glowColor, floors };
 }
 
 function buildDefaultState() {
   return {
-    version: 2,
+    version: 3,
     workers: [
       { id: 'w1', name: 'Miguel'   },
       { id: 'w2', name: 'Partner'  },
@@ -1315,9 +1390,12 @@ function renderUnits() {
   }).join('');
 
   // Unit cards
+  const typeShort = t => t === 'STUDIO' ? 'STU' : t === '1-BED' ? '1B' : t === '2-BED' ? '2B' : t === '3-BED' ? '3B' : '';
   const unitCards = Object.entries(units).map(([num, u]) => {
     const wn    = workerName(u.worker);
     const dt    = u.dateDone ? fmtDate(u.dateDone) : null;
+    const ts    = u.type ? typeShort(u.type) : '';
+    const mi    = u.moveIn ? u.moveIn : '';
     return `
       <div class="unit-card st-${u.status}"
            data-action="open-unit"
@@ -1325,6 +1403,7 @@ function renderUnits() {
            data-floor="${ui.activeFloor}"
            data-unit="${num}">
         <div class="unit-num">${num}</div>
+        ${ts ? `<div style="font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;line-height:1;margin-top:1px">${ts}${mi ? ' · '+mi : ''}</div>` : ''}
         <div class="unit-badge badge-${u.status}">${STATUS_META[u.status].short}</div>
         <div class="unit-worker">${esc(wn)}</div>
         <div class="unit-price">${fmt$(u.price)}</div>
@@ -1463,11 +1542,13 @@ function openUnitModal(propId, floor, unitNum) {
   const prop = state.properties[propId];
   _modalStatus = u.status;
 
+  const typeLabel  = u.type && u.type !== 'TBD' ? ` &nbsp;<span style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;color:var(--text-muted)">${u.type}</span>` : '';
+  const moveInStr  = u.moveIn ? ` &nbsp;·&nbsp; <span style="color:var(--amber)">Move-in: ${u.moveIn}</span>` : '';
   document.getElementById('modal-content').innerHTML = `
     <div class="modal-unit-header">
       <div>
-        <div class="modal-unit-num">Unit ${unitNum}</div>
-        <div class="modal-unit-prop" style="color:${prop.color}">${prop.name} &nbsp;·&nbsp; Floor ${floor}</div>
+        <div class="modal-unit-num">Unit ${unitNum}${typeLabel}</div>
+        <div class="modal-unit-prop" style="color:${prop.color}">${prop.name} &nbsp;·&nbsp; Floor ${floor}${moveInStr}</div>
       </div>
       <button class="modal-close" data-action="close-modal">✕</button>
     </div>
