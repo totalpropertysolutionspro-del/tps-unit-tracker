@@ -176,8 +176,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <script>
 // ── SCHEDULE DATA ────────────────────────────────────────────────────
-const PRICE = 150;
-
 const SCHED = [
   {date:'2026-05-06',units:[['519.A','1-BED','The Coda']]},
   {date:'2026-05-13',units:[['609.A','STUDIO','The Coda'],['647.A','STUDIO','The Coda']]},
@@ -199,6 +197,16 @@ const SCHED = [
   {date:'2026-08-05',units:[['624.A','STUDIO','The Coda'],['626.A','2-BED','The Coda'],['626.B','2-BED','The Coda'],['630.A','2-BED','The Coda']]},
   {date:'2026-08-12',units:[['422.A','2-BED','The Coda'],['422.B','2-BED','The Coda'],['561.A','1-BED','The Coda']]}
 ];
+
+// ── PRICING (per signed contract Cleaning.scope_contractor_MR26) ────
+// 1BR / Studio = $195 | 2BR = $220 | 3BR = $245 | 4BR (Mayflower) = $300
+function unitPrice(type) {
+  if (!type) return 195;
+  if (type.startsWith('4')) return 300;
+  if (type.startsWith('3')) return 245;
+  if (type.startsWith('2')) return 220;
+  return 195; // 1-BED, 1-BED/1-BATH, STUDIO
+}
 
 // ── HELPERS ─────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0];
@@ -234,7 +242,7 @@ function computeEarnings(filter) {
     if (st === 'upcoming') continue;
     if (filter === 'today' && day.date !== t) continue;
     if (filter === 'month' && !day.date.startsWith(m)) continue;
-    earn += day.units.length * PRICE;
+    earn += day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
     count += day.units.length;
   }
   return {earn, count};
@@ -266,7 +274,7 @@ function renderToday() {
   let html = '';
 
   if (todayDay) {
-    const earn = todayDay.units.length * PRICE;
+    const earn = todayDay.units.reduce((s, u) => s + unitPrice(u[1]), 0);
     html += `<div class="today-banner">
       <div class="tb-row">
         <div><div class="tb-title">Today's Jobs</div><div class="tb-sub">${fmtDate(t)}</div></div>
@@ -295,7 +303,7 @@ function renderToday() {
       <div class="next-label">Next Job Day — ${days} day${days!==1?'s':''} away</div>
       <div class="next-row">
         <div class="next-date">${fmtDate(next.date)}</div>
-        <div class="next-earn">${fmtMoney(next.units.length * PRICE)} · ${next.units.length} unit${next.units.length!==1?'s':''}</div>
+        <div class="next-earn">${fmtMoney(next.units.reduce((s,u)=>s+unitPrice(u[1]),0))} · ${next.units.length} unit${next.units.length!==1?'s':''}</div>
       </div>
       <div class="next-units-list">
         ${next.units.slice(0,4).map(([u,type,bldg])=>`
@@ -330,7 +338,7 @@ function renderHistory() {
 
   let html = '';
   for (const [mk, days] of Object.entries(months).sort((a,b) => b[0] < a[0] ? -1 : 1)) {
-    const mEarn = days.reduce((a,d) => a + d.units.length * PRICE, 0);
+    const mEarn = days.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
     const mCount = days.reduce((a,d) => a + d.units.length, 0);
     const mName = new Date(mk+'-15').toLocaleDateString('en-US',{month:'long',year:'numeric'});
     html += `<div class="hist-month">
@@ -339,7 +347,7 @@ function renderHistory() {
         <div class="month-earn">${fmtMoney(mEarn)} · ${mCount} units</div>
       </div>`;
     for (const day of days) {
-      const earn = day.units.length * PRICE;
+      const earn = day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
       const st = dayStatus(day.date);
       const dotColor = st === 'done' ? 'var(--green)' : 'var(--amber)';
       const id = 'jd_' + day.date.replace(/-/g,'');
@@ -365,7 +373,7 @@ function renderHistory() {
               <div><div class="unum">Unit ${u}</div><div class="utype">${type} · ${bldg}</div></div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:14px;font-weight:700;color:var(--green)">${fmtMoney(PRICE)}</div>
+              <div style="font-size:14px;font-weight:700;color:var(--green)">${fmtMoney(unitPrice(type))}</div>
               <div style="font-size:10px;color:var(--dim)">${typeShort(type)}</div>
             </div>
           </div>`).join('')}
@@ -391,7 +399,7 @@ function renderSummary() {
   const totalSched = totalUnitsScheduled();
   const {earn:ea, count:ca} = computeEarnings('all');
   const remaining = totalSched - ca;
-  const projectedTotal = totalSched * PRICE;
+  const projectedTotal = SCHED.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
   const pct = Math.round((ca / totalSched) * 100);
 
   // By building
@@ -411,7 +419,7 @@ function renderSummary() {
     if (day.date > t) continue;
     const mk = day.date.slice(0,7);
     if (!byMonth[mk]) byMonth[mk] = {earn:0, count:0};
-    byMonth[mk].earn += day.units.length * PRICE;
+    byMonth[mk].earn += day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
     byMonth[mk].count += day.units.length;
   }
 
