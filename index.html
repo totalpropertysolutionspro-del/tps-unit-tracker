@@ -1001,15 +1001,38 @@ function makeCodaUnits(floorNum, defaultPrice) {
   return units;
 }
 
-function makeMayflowerUnits(defaultPrice) {
-  // Placeholder — will be replaced with real data once PDF is uploaded
-  return {
-    'PENDING': {
-      status: 'not_started', worker: null, dateDone: null,
-      price: defaultPrice, notes: 'Upload Mayflower make-ready PDF to get real unit list.',
-      type: 'TBD', moveIn: ''
-    }
-  };
+// ── REAL UNIT DATA — MAYFLOWER (Make-Ready PDF, Apr 29 2026) ─────────────
+// Mayflower uses Bed/Bath format (1-BED/1-BATH, 2-BED/2-BATH, etc.) incl. 4-BED units
+const MAYFLOWER_UNIT_DATA = {
+  '4': [
+    ['401.A','2-BED/1-BATH',''],    ['401.B','2-BED/1-BATH',''],    ['402.A','1-BED/1-BATH',''],
+    ['403.A','2-BED/2-BATH',''],    ['403.B','2-BED/2-BATH',''],    ['404.A','3-BED/2-BATH','8/1'],
+    ['404.B','3-BED/2-BATH','8/1'], ['404.C','3-BED/2-BATH','8/1'], ['405.A','3-BED/2-BATH','8/1'],
+    ['405.B','3-BED/2-BATH','8/1'], ['405.C','3-BED/2-BATH','8/1'], ['406.A','2-BED/2-BATH','7/23'],
+    ['406.B','2-BED/2-BATH','7/23'],['407.A','1-BED/1-BATH','5/18'],['409.A','STUDIO','']
+  ],
+  '5': [
+    ['501.A','2-BED/1-BATH','8/1'], ['501.B','2-BED/1-BATH','8/1'], ['502.A','1-BED/1-BATH',''],
+    ['503.A','2-BED/2-BATH','8/1'], ['503.B','2-BED/2-BATH','8/1'], ['504.A','3-BED/2-BATH',''],
+    ['505.A','3-BED/2-BATH','8/1'], ['505.B','3-BED/2-BATH','8/1'], ['505.C','3-BED/2-BATH','8/1'],
+    ['506.A','2-BED/2-BATH','8/15'],['506.B','2-BED/2-BATH','8/15'],['508.A','4-BED/3-BATH','8/1'],
+    ['508.B','4-BED/3-BATH','8/1'], ['508.C','4-BED/3-BATH','8/1'], ['508.D','4-BED/3-BATH','8/1']
+  ],
+  '6': [
+    ['601.A','2-BED/1-BATH','8/1'], ['601.B','2-BED/1-BATH','8/1'], ['602.A','1-BED/1-BATH','8/1'],
+    ['603.A','2-BED/2-BATH',''],    ['603.B','2-BED/2-BATH',''],    ['604.A','3-BED/2-BATH','8/1'],
+    ['604.B','3-BED/2-BATH','8/1'], ['604.C','3-BED/2-BATH','8/1'], ['605.C','3-BED/2-BATH','8/1'],
+    ['606.A','2-BED/2-BATH','7/23'],['608.A','4-BED/3-BATH','8/1'], ['608.B','4-BED/3-BATH','8/1'],
+    ['608.C','4-BED/3-BATH','8/1'], ['608.D','4-BED/3-BATH','8/1']
+  ]
+};
+
+function makeMayflowerUnits(floorNum, defaultPrice) {
+  const units = {};
+  for (const [uid, type, moveIn] of (MAYFLOWER_UNIT_DATA[String(floorNum)] || [])) {
+    units[uid] = { status: 'not_started', worker: null, dateDone: null, price: defaultPrice, notes: '', type, moveIn };
+  }
+  return units;
 }
 
 function makeProperty(id, name, color, dimColor, glowColor, defaultPrice) {
@@ -1017,7 +1040,7 @@ function makeProperty(id, name, color, dimColor, glowColor, defaultPrice) {
   for (const f of FLOORS) {
     floors[String(f)] = id === 'coda'
       ? makeCodaUnits(f, defaultPrice)
-      : makeMayflowerUnits(defaultPrice);
+      : makeMayflowerUnits(f, defaultPrice);
   }
   return { id, name, color, dimColor, glowColor, floors };
 }
@@ -1390,7 +1413,12 @@ function renderUnits() {
   }).join('');
 
   // Unit cards
-  const typeShort = t => t === 'STUDIO' ? 'STU' : t === '1-BED' ? '1B' : t === '2-BED' ? '2B' : t === '3-BED' ? '3B' : '';
+  const typeShort = t => {
+    if (!t) return '';
+    if (t === 'STUDIO') return 'STU';
+    const m = t.match(/^(\d)-BED/);
+    return m ? m[1]+'B' : '';
+  };
   const unitCards = Object.entries(units).map(([num, u]) => {
     const wn    = workerName(u.worker);
     const dt    = u.dateDone ? fmtDate(u.dateDone) : null;
