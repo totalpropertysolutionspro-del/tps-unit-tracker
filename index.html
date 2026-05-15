@@ -3,1850 +3,501 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TPS Pro — Unit Turn Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>TPS Pro — Unit Tracker</title>
 <style>
-/* ══════════════════════════════════════════════════
-   TPS PRO LLC — UNIT TURN TRACKER
-   Design tokens & global reset
-══════════════════════════════════════════════════ */
-:root {
-  --bg:          #0d1117;
-  --bg-card:     #161b22;
-  --bg-card2:    #1c2128;
-  --bg-input:    #0d1117;
-  --border:      rgba(255,255,255,0.08);
-  --border-hi:   rgba(255,255,255,0.16);
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#09090f;--card:#111118;--card2:#18181f;--border:#ffffff0d;
+  --gold:#f5c842;--green:#22c55e;--blue:#3b82f6;--red:#ef4444;
+  --amber:#f59e0b;--purple:#a855f7;--teal:#14b8a6;
+  --text:#f0f0f0;--dim:#666;--dimmer:#333;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;min-height:100vh;padding-bottom:80px}
 
-  /* TPS Brand */
-  --amber:       #F59E0B;
-  --amber-hi:    #FBBF24;
-  --gold:        #FACC15;
-  --amber-dim:   rgba(245,158,11,0.14);
+/* ── HEADER ── */
+.hdr{padding:54px 18px 16px;background:linear-gradient(180deg,#0c0c18,var(--bg))}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hdr h1{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.hdr h1 span{color:var(--gold)}
+.hdr-date{font-size:12px;color:var(--dim);margin-top:3px}
+.live-dot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);font-weight:600}
+.live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-  /* Property colors */
-  --coda:        #F59E0B;
-  --coda-dim:    rgba(245,158,11,0.13);
-  --coda-glow:   rgba(245,158,11,0.25);
-  --may:         #38bdf8;
-  --may-dim:     rgba(56,189,248,0.12);
-  --may-glow:    rgba(56,189,248,0.22);
+/* ── EARNINGS CARDS ── */
+.earn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
+.earn-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .2s}
+.earn-card.active{border-color:var(--gold)}
+.earn-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.earn-num{font-size:28px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.earn-sub{font-size:11px;color:var(--dim);margin-top:4px}
+.earn-full{margin:10px 14px 0;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .2s}
+.earn-full.active{border-color:var(--gold)}
+.earn-full-inner{display:flex;justify-content:space-between;align-items:center}
+.col-green{color:var(--green)}
+.col-blue{color:var(--blue)}
+.col-gold{color:var(--gold)}
+.col-purple{color:var(--purple)}
 
-  /* Status colors */
-  --green:       #22c55e;
-  --green-dim:   rgba(34,197,94,0.14);
-  --yellow:      #f59e0b;
-  --yellow-dim:  rgba(245,158,11,0.14);
-  --red:         #ef4444;
-  --red-dim:     rgba(239,68,68,0.14);
-  --gray-dim:    rgba(255,255,255,0.06);
+/* ── TAB BAR ── */
+.tabs{display:flex;gap:0;padding:16px 14px 0;border-bottom:1px solid var(--border);margin-bottom:2px}
+.tab{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--dim);padding:10px 0;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
 
-  /* Text */
-  --text:        #f0f6fc;
-  --text-muted:  #8b949e;
-  --text-dim:    #545d68;
+/* ── CONTENT ── */
+.pane{display:none;padding:14px}
+.pane.on{display:block}
 
-  --radius:      12px;
-  --radius-sm:   8px;
-  --sans:        'Inter', system-ui, -apple-system, sans-serif;
-}
+/* ── TODAY PANE ── */
+.today-banner{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.tb-row{display:flex;justify-content:space-between;align-items:center}
+.tb-title{font-size:16px;font-weight:700}
+.tb-earn{font-size:22px;font-weight:800;color:var(--green)}
+.tb-sub{font-size:12px;color:var(--dim);margin-top:3px}
+.no-units{text-align:center;padding:40px 20px;color:var(--dim)}
+.no-big{font-size:40px;margin-bottom:10px}
+.next-up{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:14px}
+.next-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:8px}
+.next-row{display:flex;justify-content:space-between;align-items:center}
+.next-date{font-size:17px;font-weight:700}
+.next-earn{font-size:15px;font-weight:700;color:var(--amber)}
+.next-units-list{margin-top:10px;display:flex;flex-direction:column;gap:5px}
 
-*, *::before, *::after {
-  box-sizing: border-box; margin: 0; padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
+.unit-row{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:11px;padding:11px 14px;margin-bottom:6px;border:1px solid var(--border)}
+.unit-row.done{opacity:.7}
+.ul{display:flex;align-items:center;gap:10px}
+.uicon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ic-coda{background:#3b82f618}
+.ic-may{background:#f59e0b18}
+.unum{font-size:14px;font-weight:700}
+.utype{font-size:11px;color:var(--dim);margin-top:1px}
+.ubldg{font-size:11px;color:var(--dim)}
+.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:20px;padding:4px 10px}
+.sp-done{background:#22c55e18;color:var(--green)}
+.sp-today{background:#f59e0b18;color:var(--amber)}
+.sp-upcoming{background:#3b82f618;color:var(--blue)}
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ── HISTORY PANE ── */
+.hist-month{margin-bottom:20px}
+.month-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 2px}
+.month-name{font-size:15px;font-weight:700}
+.month-earn{font-size:14px;font-weight:700;color:var(--green)}
+.job-day{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.jd-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer}
+.jd-left{display:flex;align-items:center;gap:10px}
+.jd-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.jd-date{font-size:14px;font-weight:700}
+.jd-count{font-size:12px;color:var(--dim);margin-top:2px}
+.jd-right{text-align:right}
+.jd-earn{font-size:17px;font-weight:800}
+.jd-chevron{font-size:12px;color:var(--dim);margin-left:6px;transition:transform .2s}
+.jd-units{display:none;border-top:1px solid var(--border);padding:10px 14px}
+.jd-units.open{display:block}
 
-/* ── APP SHELL ────────────────────────────── */
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  position: relative;
-}
+/* ── MONTH FILTER ── */
+.month-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;margin-bottom:4px}
+.month-filters::-webkit-scrollbar{display:none}
+.mf-btn{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;white-space:nowrap}
+.mf-btn.active{background:var(--gold);color:#000;border-color:var(--gold)}
 
-/* ── HEADER ───────────────────────────────── */
-#header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: rgba(13,17,23,0.96);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 10;
-}
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 18px;z-index:100}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10px;font-weight:600;color:var(--dim)}
+.bn-item.on{color:var(--gold)}
+.bn-icon{font-size:22px}
 
-.logo-mark {
-  width: 38px; height: 38px;
-  background: linear-gradient(135deg, #F59E0B 0%, #FACC15 100%);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 0 18px rgba(245,158,11,0.45);
-}
-.logo-mark svg { width: 22px; height: 22px; }
+/* ── SUMMARY PANE ── */
+.sum-section{margin-bottom:20px}
+.sum-title{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:10px;padding:0 2px}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.sc-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.sc-num{font-size:26px;font-weight:800;letter-spacing:-1px}
+.progress-bar{height:6px;background:var(--dimmer);border-radius:6px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:6px;transition:width 1s ease}
 
-.logo-text { flex: 1; min-width: 0; }
-.logo-title {
-  font-size: 15px; font-weight: 900;
-  color: var(--amber);
-  letter-spacing: 0.6px;
-  line-height: 1;
-  text-transform: uppercase;
-}
-.logo-sub {
-  font-size: 11px; font-weight: 500;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-#prop-badge {
-  padding: 5px 11px;
-  border-radius: 20px;
-  font-size: 11px; font-weight: 800;
-  letter-spacing: 0.4px;
-  flex-shrink: 0;
-  transition: all 0.25s;
-  display: none;
-  white-space: nowrap;
-}
-
-/* ── MAIN SCROLL AREA ─────────────────────── */
-#main {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* ── BOTTOM NAV ───────────────────────────── */
-#bottom-nav {
-  flex-shrink: 0;
-  display: flex;
-  background: #161b22;
-  border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.nav-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 4px;
-  min-height: 58px;
-  border: none;
-  background: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  gap: 4px;
-  transition: color 0.2s;
-  position: relative;
-}
-.nav-btn svg { width: 22px; height: 22px; stroke-width: 1.8; }
-.nav-btn span { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
-.nav-btn.active { color: var(--amber); }
-.nav-btn.active::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 20%; right: 20%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--amber), var(--gold));
-  border-radius: 0 0 2px 2px;
-}
-
-/* ── TABS ─────────────────────────────────── */
-.tab { display: none; padding: 16px; }
-.tab.active { display: block; }
-
-/* ── SHARED COMPONENTS ────────────────────── */
-.section-title {
-  font-size: 10px; font-weight: 800;
-  letter-spacing: 1.2px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  margin-top: 22px;
-}
-.section-title:first-child { margin-top: 0; }
-
-.card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-
-/* ── DASHBOARD ────────────────────────────── */
-.progress-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 18px 16px;
-  margin-bottom: 12px;
-}
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-.progress-lbl { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-.progress-pct { font-size: 28px; font-weight: 900; color: var(--amber); line-height: 1; }
-
-/* Ring */
-.ring-wrap {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 16px;
-}
-.ring-svg { flex-shrink: 0; }
-.ring-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.ring-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.ring-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.ring-val { font-weight: 700; font-size: 15px; }
-.ring-lbl { color: var(--text-muted); }
-
-.progress-track {
-  height: 6px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--amber), var(--gold));
-  transition: width 0.5s cubic-bezier(.4,0,.2,1);
-}
-
-/* Stat grid */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.stat-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 14px 12px;
-  text-align: center;
-}
-.stat-val {
-  font-size: 22px; font-weight: 900;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.stat-lbl {
-  font-size: 10px; font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-/* Property breakdown card */
-.prop-breakdown {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-.prop-breakdown:active { opacity: 0.85; }
-.prop-bd-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14px;
-}
-.prop-bd-left {}
-.prop-bd-name { font-size: 15px; font-weight: 800; }
-.prop-bd-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.prop-bd-earned { font-size: 20px; font-weight: 900; }
-
-.prop-mini-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.prop-mini-stat {
-  text-align: center;
-  padding: 8px 4px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 8px;
-}
-.prop-mini-val { font-size: 17px; font-weight: 800; line-height: 1; }
-.prop-mini-lbl { font-size: 9px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 2px; }
-
-/* Worker card */
-.worker-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 14px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.worker-avatar {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: var(--amber-dim);
-  border: 2px solid var(--amber);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 800;
-  color: var(--amber);
-  flex-shrink: 0;
-  letter-spacing: -0.5px;
-}
-.worker-info { flex: 1; min-width: 0; }
-.worker-name { font-size: 15px; font-weight: 700; }
-.worker-stats { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-.worker-earned { font-size: 18px; font-weight: 800; color: var(--green); flex-shrink: 0; }
-
-/* ── UNITS TAB ────────────────────────────── */
-/* Property toggle */
-.prop-toggle {
-  display: flex;
-  background: var(--bg-card);
-  border-radius: 11px;
-  padding: 4px;
-  margin-bottom: 14px;
-  border: 1px solid var(--border);
-  gap: 4px;
-}
-.prop-toggle-btn {
-  flex: 1;
-  padding: 11px 8px;
-  border: none;
-  background: none;
-  border-radius: 8px;
-  font-size: 13px; font-weight: 700;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: all 0.2s;
-  font-family: var(--sans);
-  line-height: 1.2;
-}
-.prop-toggle-btn.active-coda {
-  background: var(--coda-dim);
-  color: var(--coda);
-  box-shadow: 0 0 14px var(--coda-glow);
-}
-.prop-toggle-btn.active-may {
-  background: var(--may-dim);
-  color: var(--may);
-  box-shadow: 0 0 14px var(--may-glow);
-}
-
-/* Floor selector */
-.floor-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.floor-tab {
-  flex: 1;
-  padding: 10px 6px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  border-radius: 9px;
-  font-size: 13px; font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-  font-family: var(--sans);
-  position: relative;
-}
-.floor-tab.active {
-  border-color: var(--amber);
-  color: var(--amber);
-  background: var(--amber-dim);
-}
-.floor-tab .fl-badge {
-  position: absolute;
-  top: -5px; right: -5px;
-  background: var(--green);
-  color: #0d1117;
-  font-size: 8px;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 8px;
-  min-width: 16px;
-  text-align: center;
-}
-.floor-tab.fl-all-done { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-
-/* Floor summary strip */
-.floor-strip {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.fl-pill {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px; font-weight: 700;
-  background: rgba(255,255,255,0.05);
-  color: var(--text-dim);
-}
-.fl-pill.done { background: var(--green-dim); color: var(--green); }
-.fl-pill.prog { background: var(--yellow-dim); color: var(--yellow); }
-
-/* Unit grid */
-.unit-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 7px;
-  margin-bottom: 16px;
-}
-.unit-card {
-  background: var(--bg-card);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  padding: 10px 6px 9px;
-  cursor: pointer;
-  text-align: center;
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.12s, box-shadow 0.12s;
-  min-height: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-}
-.unit-card:active { transform: scale(0.95); }
-
-.unit-card.st-not_started {
-  border-color: rgba(239,68,68,0.25);
-}
-.unit-card.st-in_progress {
-  border-color: rgba(245,158,11,0.45);
-  background: rgba(245,158,11,0.05);
-  box-shadow: 0 0 10px rgba(245,158,11,0.1);
-}
-.unit-card.st-done {
-  border-color: rgba(34,197,94,0.4);
-  background: rgba(34,197,94,0.05);
-  box-shadow: 0 0 10px rgba(34,197,94,0.1);
-}
-
-.unit-num {
-  font-size: 16px; font-weight: 900;
-  line-height: 1;
-  color: var(--text);
-}
-.unit-badge {
-  font-size: 8px; font-weight: 800;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  padding: 2px 5px;
-  border-radius: 8px;
-  display: inline-block;
-}
-.badge-not_started { background: var(--red-dim); color: var(--red); }
-.badge-in_progress { background: var(--yellow-dim); color: var(--yellow); }
-.badge-done { background: var(--green-dim); color: var(--green); }
-
-.unit-worker {
-  font-size: 9px; color: var(--text-muted);
-  white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  padding: 0 2px;
-}
-.unit-price {
-  font-size: 10px; font-weight: 700;
-  color: var(--text-dim);
-}
-.unit-date {
-  font-size: 9px; color: var(--green);
-  font-weight: 600;
-}
-
-/* ── MODAL ────────────────────────────────── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.modal-overlay.open {
-  opacity: 1;
-  pointer-events: all;
-}
-.modal-sheet {
-  width: 100%;
-  background: #1c2128;
-  border-radius: 22px 22px 0 0;
-  padding: 0 20px 24px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  max-height: 92vh;
-  max-height: 92dvh;
-  overflow-y: auto;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(.32,.72,0,1);
-}
-.modal-overlay.open .modal-sheet { transform: translateY(0); }
-
-.modal-handle-bar {
-  width: 40px; height: 4px;
-  background: rgba(255,255,255,0.18);
-  border-radius: 2px;
-  margin: 14px auto 22px;
-}
-
-.modal-unit-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.modal-unit-num {
-  font-size: 28px; font-weight: 900;
-  line-height: 1;
-}
-.modal-unit-prop {
-  font-size: 13px; font-weight: 600;
-  margin-top: 4px;
-}
-.modal-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: none; color: var(--text-muted);
-  font-size: 18px; line-height: 1;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Status selector */
-.status-sel {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.status-btn {
-  flex: 1;
-  padding: 14px 6px;
-  border-radius: 10px;
-  border: 2px solid rgba(255,255,255,0.08);
-  font-size: 11px; font-weight: 800;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-family: var(--sans);
-  line-height: 1.4;
-}
-.status-btn .emoji { font-size: 20px; display: block; margin-bottom: 4px; }
-.status-btn.sel-ns.picked { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-.status-btn.sel-ip.picked { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
-.status-btn.sel-dn.picked { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-
-/* Form fields */
-.form-group { margin-bottom: 16px; }
-.form-lbl {
-  display: block;
-  font-size: 10px; font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  margin-bottom: 7px;
-}
-.form-ctrl {
-  width: 100%;
-  padding: 13px 14px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-hi);
-  border-radius: 9px;
-  color: var(--text);
-  font-size: 15px;
-  font-family: var(--sans);
-  appearance: none;
-  -webkit-appearance: none;
-  transition: border-color 0.2s;
-}
-.form-ctrl:focus { outline: none; border-color: var(--amber); }
-select.form-ctrl {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%238b949e' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-}
-textarea.form-ctrl { resize: none; height: 76px; font-size: 14px; }
-
-/* Buttons */
-.btn-save {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--amber), var(--gold));
-  color: #0d1117;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px; font-weight: 900;
-  cursor: pointer;
-  font-family: var(--sans);
-  letter-spacing: 0.3px;
-  margin-top: 4px;
-  transition: opacity 0.15s, transform 0.12s;
-}
-.btn-save:active { opacity: 0.9; transform: scale(0.99); }
-
-.btn-cancel {
-  width: 100%;
-  padding: 13px;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  font-family: var(--sans);
-  margin-top: 10px;
-}
-
-/* ── SETTINGS TAB ─────────────────────────── */
-.settings-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.settings-row {
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-}
-.settings-row:last-child { border-bottom: none; }
-.settings-row-left { flex: 1; min-width: 0; }
-.settings-row-label { font-size: 14px; font-weight: 600; }
-.settings-row-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.settings-action {
-  flex-shrink: 0;
-  font-size: 13px; font-weight: 700;
-  color: var(--amber);
-  cursor: pointer;
-  background: none; border: none;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: var(--amber-dim);
-  font-family: var(--sans);
-}
-.settings-input {
-  width: 90px;
-  padding: 7px 10px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-hi);
-  border-radius: 7px;
-  color: var(--text);
-  font-size: 15px; font-weight: 700;
-  font-family: var(--sans);
-  text-align: center;
-  flex-shrink: 0;
-}
-.settings-input:focus { outline: none; border-color: var(--amber); }
-
-/* Worker list in settings */
-.worker-list-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.worker-list-item:last-of-type { border-bottom: none; }
-.worker-list-avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: var(--amber-dim);
-  border: 1.5px solid var(--amber);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-  color: var(--amber);
-  flex-shrink: 0;
-}
-.worker-name-input {
-  flex: 1;
-  padding: 7px 10px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid transparent;
-  border-radius: 7px;
-  color: var(--text);
-  font-size: 14px; font-weight: 600;
-  font-family: var(--sans);
-  transition: all 0.2s;
-}
-.worker-name-input:focus {
-  outline: none;
-  border-color: var(--amber);
-  background: rgba(255,255,255,0.08);
-}
-.remove-btn {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: var(--red-dim);
-  border: none;
-  color: var(--red);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-.remove-btn:active { background: rgba(239,68,68,0.3); }
-
-.add-worker-row {
-  padding: 12px 16px;
-  display: flex;
-  gap: 8px;
-  border-top: 1px solid var(--border);
-}
-.add-worker-input {
-  flex: 1;
-  padding: 9px 13px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-hi);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 14px;
-  font-family: var(--sans);
-}
-.add-worker-input:focus { outline: none; border-color: var(--amber); }
-.add-btn {
-  padding: 9px 18px;
-  background: var(--amber-dim);
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  border-radius: 8px;
-  font-size: 14px; font-weight: 800;
-  cursor: pointer;
-  font-family: var(--sans);
-  white-space: nowrap;
-}
-
-/* Danger zone */
-.danger-action {
-  background: none; border: none;
-  color: var(--red);
-  font-size: 13px; font-weight: 700;
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: var(--red-dim);
-  font-family: var(--sans);
-  flex-shrink: 0;
-}
-
-/* ── TOAST ────────────────────────────────── */
-#toast {
-  position: fixed;
-  bottom: 76px;
-  left: 50%;
-  transform: translateX(-50%) translateY(14px);
-  background: #1c2128;
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  padding: 9px 20px;
-  border-radius: 30px;
-  font-size: 13px; font-weight: 700;
-  opacity: 0;
-  transition: all 0.25s cubic-bezier(.4,0,.2,1);
-  pointer-events: none;
-  z-index: 999;
-  white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* ── EMPTY STATE ──────────────────────────── */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-}
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-/* ── SCROLLBAR ────────────────────────────── */
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-/* ── RESPONSIVE ───────────────────────────── */
-@media (min-width: 480px) {
-  .unit-grid { grid-template-columns: repeat(5, 1fr); }
-}
-@media (min-width: 640px) {
-  .stat-grid { grid-template-columns: repeat(4, 1fr); }
-  .unit-grid { grid-template-columns: repeat(6, 1fr); }
-}
-@media (min-width: 900px) {
-  #app {
-    max-width: 480px;
-    margin: 0 auto;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    box-shadow: 0 0 60px rgba(0,0,0,0.5);
-  }
-  body { background: #06090e; }
-}
+@media(min-width:500px){.earn-row{grid-template-columns:1fr 1fr 1fr}}
 </style>
 </head>
 <body>
 
-<div id="app">
-
-  <!-- ══ HEADER ══ -->
-  <div id="header">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" fill="#0d1117" stroke="#0d1117" stroke-width="0.5"/>
-        <path d="M12 2L3 7l9 5 9-5L12 2z" fill="#0d1117"/>
-        <path d="M12 2l9 5-9 5-9-5 9-5z" fill="rgba(0,0,0,0.3)"/>
-        <text x="12" y="15.5" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="9" fill="#0d1117" letter-spacing="0">TPS</text>
-      </svg>
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <h1>TPS Pro <span>💎</span></h1>
+      <div class="hdr-date" id="hdrDate"></div>
     </div>
-    <div class="logo-text">
-      <div class="logo-title">TPS Pro LLC</div>
-      <div class="logo-sub">Unit Turn Tracker</div>
-    </div>
-    <div id="prop-badge"></div>
-  </div>
-
-  <!-- ══ MAIN ══ -->
-  <div id="main">
-    <div id="tab-dashboard" class="tab active"></div>
-    <div id="tab-units"     class="tab"></div>
-    <div id="tab-workers"   class="tab"></div>
-    <div id="tab-settings"  class="tab"></div>
-  </div>
-
-  <!-- ══ BOTTOM NAV ══ -->
-  <nav id="bottom-nav">
-    <button class="nav-btn active" data-tab="dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-      </svg>
-      <span>Dashboard</span>
-    </button>
-    <button class="nav-btn" data-tab="units">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-        <polyline points="9,22 9,12 15,12 15,22"/>
-      </svg>
-      <span>Units</span>
-    </button>
-    <button class="nav-btn" data-tab="workers">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-      </svg>
-      <span>Workers</span>
-    </button>
-    <button class="nav-btn" data-tab="settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-      </svg>
-      <span>Settings</span>
-    </button>
-  </nav>
-</div>
-
-<!-- ══ EDIT UNIT MODAL ══ -->
-<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
-  <div class="modal-sheet" id="modal-sheet">
-    <div class="modal-handle-bar"></div>
-    <div id="modal-content"></div>
+    <div class="live-dot">LIVE</div>
   </div>
 </div>
 
-<!-- ══ TOAST ══ -->
-<div id="toast"></div>
+<!-- EARNINGS CARDS -->
+<div class="earn-row">
+  <div class="earn-card active" id="filterToday" onclick="setFilter('today')">
+    <div class="earn-label">Today</div>
+    <div class="earn-num col-green" id="earnToday">$0</div>
+    <div class="earn-sub" id="unitsToday">0 units</div>
+  </div>
+  <div class="earn-card" id="filterMonth" onclick="setFilter('month')">
+    <div class="earn-label">This Month</div>
+    <div class="earn-num col-blue" id="earnMonth">$0</div>
+    <div class="earn-sub" id="unitsMonth">0 units</div>
+  </div>
+</div>
+<div class="earn-full" id="filterAll" onclick="setFilter('all')">
+  <div class="earn-full-inner">
+    <div>
+      <div class="earn-label">Total Earned — All Time</div>
+      <div class="earn-num col-gold" id="earnAll">$0</div>
+    </div>
+    <div style="text-align:right">
+      <div class="earn-label">Units Done</div>
+      <div class="earn-num col-purple" id="unitsDone">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab on" onclick="showTab('today')">Today</div>
+  <div class="tab" onclick="showTab('history')">History</div>
+  <div class="tab" onclick="showTab('summary')">Summary</div>
+</div>
+
+<!-- TODAY PANE -->
+<div class="pane on" id="pane-today"></div>
+
+<!-- HISTORY PANE -->
+<div class="pane" id="pane-history"></div>
+
+<!-- SUMMARY PANE -->
+<div class="pane" id="pane-summary"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════════
-   TPS PRO LLC — UNIT TURN TRACKER
-   Albany NY Student Housing — The Coda + Mayflower
-   Built May 2026
-═══════════════════════════════════════════════════════ */
+// ── SCHEDULE DATA ────────────────────────────────────────────────────
+const PRICE = 150;
 
-// ── CONSTANTS ─────────────────────────────────────────
-const STORAGE_KEY = 'tps_tracker_v3';
-const FLOORS      = [4, 5, 6];
+const SCHED = [
+  {date:'2026-05-06',units:[['519.A','1-BED','The Coda']]},
+  {date:'2026-05-13',units:[['609.A','STUDIO','The Coda'],['647.A','STUDIO','The Coda']]},
+  {date:'2026-05-14',units:[['523.A','1-BED','The Coda'],['541.A','1-BED','The Coda'],['407.A','1-BED/1-BATH','Mayflower']]},
+  {date:'2026-05-15',units:[['540.A','1-BED','The Coda']]},
+  {date:'2026-05-19',units:[['532.A','2-BED','The Coda'],['532.B','2-BED','The Coda'],['501.A','2-BED/1-BATH','Mayflower'],['501.B','2-BED/1-BATH','Mayflower']]},
+  {date:'2026-05-20',units:[['436.A','STUDIO','The Coda'],['641.A','1-BED','The Coda'],['502.A','1-BED/1-BATH','Mayflower']]},
+  {date:'2026-05-27',units:[['517.A','1-BED','The Coda']]},
+  {date:'2026-06-03',units:[['634.A','1-BED','The Coda'],['645.A','1-BED','The Coda'],['653.A','1-BED','The Coda']]},
+  {date:'2026-06-04',units:[['420.A','STUDIO','The Coda']]},
+  {date:'2026-06-17',units:[['663.A','1-BED','The Coda']]},
+  {date:'2026-07-02',units:[['633.A','STUDIO','The Coda']]},
+  {date:'2026-07-17',units:[['401.A','1-BED','The Coda'],['405.A','2-BED','The Coda'],['405.B','2-BED','The Coda'],['409.A','STUDIO','The Coda'],['412.A','3-BED','The Coda'],['412.B','3-BED','The Coda'],['412.C','3-BED','The Coda'],['413.A','2-BED','The Coda'],['413.B','2-BED','The Coda'],['415.A','STUDIO','The Coda'],['416.A','2-BED','The Coda'],['416.B','2-BED','The Coda'],['424.A','STUDIO','The Coda'],['465.A','3-BED','The Coda'],['465.B','3-BED','The Coda'],['465.C','3-BED','The Coda'],['501.A','1-BED','The Coda'],['509.A','STUDIO','The Coda'],['511.A','STUDIO','The Coda'],['513.A','2-BED','The Coda'],['516.A','2-BED','The Coda'],['516.B','2-BED','The Coda'],['518.A','2-BED','The Coda'],['518.B','2-BED','The Coda'],['521.A','STUDIO','The Coda'],['524.A','STUDIO','The Coda'],['526.A','2-BED','The Coda'],['526.B','2-BED','The Coda'],['527.A','1-BED','The Coda'],['528.A','2-BED','The Coda'],['528.B','2-BED','The Coda'],['534.A','1-BED','The Coda'],['535.A','1-BED','The Coda'],['603.A','STUDIO','The Coda'],['607.A','1-BED','The Coda'],['612.C','3-BED','The Coda'],['615.A','STUDIO','The Coda'],['618.A','2-BED','The Coda'],['618.B','2-BED','The Coda'],['619.A','1-BED','The Coda'],['628.A','2-BED','The Coda'],['628.B','2-BED','The Coda'],['630.B','2-BED','The Coda'],['632.A','2-BED','The Coda'],['632.B','2-BED','The Coda'],['637.A','2-BED','The Coda'],['637.B','2-BED','The Coda'],['642.A','STUDIO','The Coda'],['643.A','STUDIO','The Coda'],['401.A','2-BED/1-BATH','Mayflower'],['401.B','2-BED/1-BATH','Mayflower'],['402.A','1-BED/1-BATH','Mayflower'],['403.A','2-BED/2-BATH','Mayflower'],['403.B','2-BED/2-BATH','Mayflower'],['404.A','3-BED/2-BATH','Mayflower'],['404.B','3-BED/2-BATH','Mayflower'],['404.C','3-BED/2-BATH','Mayflower'],['406.A','2-BED/2-BATH','Mayflower'],['406.B','2-BED/2-BATH','Mayflower'],['503.A','2-BED/2-BATH','Mayflower'],['503.B','2-BED/2-BATH','Mayflower'],['504.A','3-BED/2-BATH','Mayflower'],['505.A','3-BED/2-BATH','Mayflower'],['505.B','3-BED/2-BATH','Mayflower'],['505.C','3-BED/2-BATH','Mayflower'],['601.A','2-BED/1-BATH','Mayflower'],['601.B','2-BED/1-BATH','Mayflower'],['602.A','1-BED/1-BATH','Mayflower'],['603.A','2-BED/2-BATH','Mayflower'],['603.B','2-BED/2-BATH','Mayflower'],['604.A','3-BED/2-BATH','Mayflower'],['604.B','3-BED/2-BATH','Mayflower'],['604.C','3-BED/2-BATH','Mayflower'],['605.C','3-BED/2-BATH','Mayflower'],['606.A','2-BED/2-BATH','Mayflower'],['608.A','4-BED/3-BATH','Mayflower'],['608.B','4-BED/3-BATH','Mayflower'],['608.C','4-BED/3-BATH','Mayflower'],['608.D','4-BED/3-BATH','Mayflower']]},
+  {date:'2026-07-20',units:[['419.A','1-BED','The Coda'],['421.A','STUDIO','The Coda'],['423.A','1-BED','The Coda'],['426.A','2-BED','The Coda'],['426.B','2-BED','The Coda'],['427.A','1-BED','The Coda'],['428.A','2-BED','The Coda'],['428.B','2-BED','The Coda'],['429.A','STUDIO','The Coda'],['430.A','2-BED','The Coda'],['430.B','2-BED','The Coda'],['432.A','2-BED','The Coda'],['432.B','2-BED','The Coda'],['434.A','1-BED','The Coda'],['438.A','1-BED','The Coda'],['440.A','1-BED','The Coda'],['530.B','2-BED','The Coda'],['533.A','STUDIO','The Coda'],['537.A','2-BED','The Coda'],['537.B','2-BED','The Coda'],['539.A','STUDIO','The Coda'],['542.A','STUDIO','The Coda'],['543.A','STUDIO','The Coda'],['545.A','1-BED','The Coda'],['546.A','STUDIO','The Coda'],['547.A','STUDIO','The Coda'],['549.A','1-BED','The Coda'],['551.A','2-BED','The Coda'],['551.B','2-BED','The Coda'],['555.A','STUDIO','The Coda'],['601.A','1-BED','The Coda'],['605.A','2-BED','The Coda'],['611.A','STUDIO','The Coda'],['621.A','STUDIO','The Coda'],['625.A','1-BED','The Coda'],['627.A','1-BED','The Coda'],['629.A','STUDIO','The Coda'],['631.A','STUDIO','The Coda'],['636.A','STUDIO','The Coda'],['640.A','1-BED','The Coda'],['644.A','2-BED','The Coda'],['644.B','2-BED','The Coda'],['646.A','STUDIO','The Coda'],['651.A','2-BED','The Coda'],['651.B','2-BED','The Coda'],['659.A','STUDIO','The Coda'],['665.A','3-BED','The Coda'],['665.B','3-BED','The Coda'],['665.C','3-BED','The Coda']]},
+  {date:'2026-07-21',units:[['442.A','STUDIO','The Coda'],['443.A','STUDIO','The Coda'],['445.A','1-BED','The Coda'],['447.A','STUDIO','The Coda'],['449.A','1-BED','The Coda'],['459.A','STUDIO','The Coda']]},
+  {date:'2026-07-27',units:[['437.A','2-BED','The Coda'],['437.B','2-BED','The Coda'],['512.A','3-BED','The Coda'],['512.B','3-BED','The Coda'],['512.C','3-BED','The Coda'],['565.A','3-BED','The Coda'],['565.B','3-BED','The Coda'],['565.C','3-BED','The Coda'],['616.A','2-BED','The Coda'],['616.B','2-BED','The Coda'],['635.A','1-BED','The Coda'],['508.A','4-BED/3-BATH','Mayflower'],['508.B','4-BED/3-BATH','Mayflower'],['508.C','4-BED/3-BATH','Mayflower'],['508.D','4-BED/3-BATH','Mayflower']]},
+  {date:'2026-07-30',units:[['612.A','3-BED','The Coda'],['612.B','3-BED','The Coda']]},
+  {date:'2026-08-04',units:[['418.A','2-BED','The Coda'],['418.B','2-BED','The Coda'],['433.A','STUDIO','The Coda'],['453.A','1-BED','The Coda'],['455.A','STUDIO','The Coda'],['507.A','1-BED','The Coda'],['515.A','STUDIO','The Coda'],['605.B','2-BED','The Coda'],['620.A','STUDIO','The Coda'],['622.A','2-BED','The Coda'],['622.B','2-BED','The Coda'],['623.A','1-BED','The Coda'],['405.A','3-BED/2-BATH','Mayflower'],['405.B','3-BED/2-BATH','Mayflower'],['405.C','3-BED/2-BATH','Mayflower'],['409.A','STUDIO','Mayflower'],['506.A','2-BED/2-BATH','Mayflower'],['506.B','2-BED/2-BATH','Mayflower']]},
+  {date:'2026-08-05',units:[['624.A','STUDIO','The Coda'],['626.A','2-BED','The Coda'],['626.B','2-BED','The Coda'],['630.A','2-BED','The Coda']]},
+  {date:'2026-08-12',units:[['422.A','2-BED','The Coda'],['422.B','2-BED','The Coda'],['561.A','1-BED','The Coda']]}
+];
 
-const STATUS_META = {
-  not_started: { label: 'Not Started', short: 'NS',  emoji: '🔴' },
-  in_progress:  { label: 'In Progress', short: 'IP',  emoji: '🟡' },
-  done:         { label: 'Done',        short: '✓',   emoji: '🟢' }
-};
+// ── HELPERS ─────────────────────────────────────────────────────────
+const todayStr = () => new Date().toISOString().split('T')[0];
+const monthStr = () => todayStr().slice(0,7);
 
-// ── REAL UNIT DATA — THE CODA (Make-Ready PDF, Apr 29 2026) ──────────────
-// [unitId, type, moveIn]  moveIn = '' when not yet scheduled
-const CODA_UNIT_DATA = {
-  '4': [
-    ['401.A','1-BED',''],      ['405.A','2-BED','7/23'],  ['405.B','2-BED','7/23'],
-    ['409.A','STUDIO','8/1'],  ['412.A','3-BED',''],      ['412.B','3-BED',''],
-    ['412.C','3-BED',''],      ['413.A','2-BED','7/23'],  ['413.B','2-BED','7/23'],
-    ['415.A','STUDIO','7/23'], ['416.A','2-BED','8/1'],   ['416.B','2-BED','8/1'],
-    ['418.A','2-BED','8/15'],  ['418.B','2-BED','8/15'],  ['419.A','1-BED','8/1'],
-    ['420.A','STUDIO','6/15'], ['421.A','STUDIO','8/1'],  ['422.A','2-BED',''],
-    ['422.B','2-BED',''],      ['423.A','1-BED','8/1'],   ['424.A','STUDIO',''],
-    ['426.A','2-BED','8/1'],   ['426.B','2-BED','8/1'],   ['427.A','1-BED','8/1'],
-    ['428.A','2-BED','8/1'],   ['428.B','2-BED','8/1'],   ['429.A','STUDIO','8/1'],
-    ['430.A','2-BED','8/1'],   ['430.B','2-BED','8/1'],   ['432.A','2-BED','8/1'],
-    ['432.B','2-BED','8/1'],   ['433.A','STUDIO','8/15'], ['434.A','1-BED','8/1'],
-    ['436.A','STUDIO','8/1'],  ['437.A','2-BED','8/1'],   ['437.B','2-BED','8/1'],
-    ['438.A','1-BED','8/1'],   ['440.A','1-BED','8/1'],   ['442.A','STUDIO','8/1'],
-    ['443.A','STUDIO','8/1'],  ['445.A','1-BED','8/1'],   ['447.A','STUDIO','8/1'],
-    ['449.A','1-BED','8/1'],   ['453.A','1-BED','8/15'],  ['455.A','STUDIO','8/15'],
-    ['459.A','STUDIO','8/1'],  ['465.A','3-BED',''],      ['465.B','3-BED',''],
-    ['465.C','3-BED','']
-  ],
-  '5': [
-    ['501.A','1-BED','8/1'],   ['507.A','1-BED','8/15'],  ['509.A','STUDIO','7/23'],
-    ['511.A','STUDIO','8/1'],  ['512.A','3-BED',''],      ['512.B','3-BED',''],
-    ['512.C','3-BED',''],      ['513.A','2-BED',''],      ['515.A','STUDIO','8/8'],
-    ['516.A','2-BED','8/1'],   ['516.B','2-BED','8/1'],   ['517.A','1-BED','8/1'],
-    ['518.A','2-BED','8/1'],   ['518.B','2-BED','8/1'],   ['519.A','1-BED','5/15'],
-    ['521.A','STUDIO','8/1'],  ['523.A','1-BED','5/16'],  ['524.A','STUDIO','8/1'],
-    ['526.A','2-BED','7/23'],  ['526.B','2-BED','7/23'],  ['527.A','1-BED','8/1'],
-    ['528.A','2-BED','8/1'],   ['528.B','2-BED','8/1'],   ['530.B','2-BED','8/1'],
-    ['532.A','2-BED','5/15'],  ['532.B','2-BED','5/15'],  ['533.A','STUDIO','8/1'],
-    ['534.A','1-BED','7/23'],  ['535.A','1-BED','7/23'],  ['537.A','2-BED',''],
-    ['537.B','2-BED',''],      ['539.A','STUDIO','8/1'],  ['540.A','1-BED','5/15'],
-    ['541.A','1-BED','5/18'],  ['542.A','STUDIO','7/23'], ['543.A','STUDIO','8/1'],
-    ['545.A','1-BED','8/1'],   ['546.A','STUDIO','8/1'],  ['547.A','STUDIO','7/28'],
-    ['549.A','1-BED','7/28'],  ['551.A','2-BED','8/1'],   ['551.B','2-BED','8/15'],
-    ['555.A','STUDIO','7/24'], ['561.A','1-BED',''],      ['565.A','3-BED','8/1'],
-    ['565.B','3-BED','8/1'],   ['565.C','3-BED','8/1']
-  ],
-  '6': [
-    ['601.A','1-BED','8/1'],   ['603.A','STUDIO',''],     ['605.A','2-BED','8/1'],
-    ['605.B','2-BED','8/1'],   ['607.A','1-BED',''],      ['609.A','STUDIO',''],
-    ['611.A','STUDIO','8/1'],  ['612.A','3-BED',''],      ['612.B','3-BED',''],
-    ['612.C','3-BED',''],      ['615.A','STUDIO',''],     ['616.A','2-BED',''],
-    ['616.B','2-BED',''],      ['618.A','2-BED',''],      ['618.B','2-BED',''],
-    ['619.A','1-BED','7/23'],  ['620.A','STUDIO',''],     ['621.A','STUDIO','8/1'],
-    ['622.A','2-BED',''],      ['622.B','2-BED',''],      ['623.A','1-BED','8/15'],
-    ['624.A','STUDIO',''],     ['625.A','1-BED','8/1'],   ['626.A','2-BED',''],
-    ['626.B','2-BED',''],      ['627.A','1-BED','8/8'],   ['628.A','2-BED',''],
-    ['628.B','2-BED',''],      ['629.A','STUDIO','8/1'],  ['630.A','2-BED',''],
-    ['630.B','2-BED',''],      ['631.A','STUDIO','7/23'], ['632.A','2-BED',''],
-    ['632.B','2-BED',''],      ['633.A','STUDIO','7/15'], ['634.A','1-BED','6/1'],
-    ['635.A','1-BED',''],      ['636.A','STUDIO','8/1'],  ['637.A','2-BED',''],
-    ['637.B','2-BED',''],      ['640.A','1-BED','7/25'],  ['641.A','1-BED','5/18'],
-    ['642.A','STUDIO',''],     ['643.A','STUDIO',''],     ['644.A','2-BED',''],
-    ['644.B','2-BED',''],      ['645.A','1-BED','6/15'],  ['646.A','STUDIO',''],
-    ['647.A','STUDIO','5/15'], ['651.A','2-BED',''],      ['651.B','2-BED',''],
-    ['653.A','1-BED','6/15'],  ['659.A','STUDIO',''],     ['663.A','1-BED','7/1'],
-    ['665.A','3-BED',''],      ['665.B','3-BED',''],      ['665.C','3-BED','']
-  ]
-};
-
-// ── DEFAULT DATA FACTORY ──────────────────────────────
-function makeCodaUnits(floorNum, defaultPrice) {
-  const units = {};
-  for (const [uid, type, moveIn] of (CODA_UNIT_DATA[String(floorNum)] || [])) {
-    units[uid] = { status: 'not_started', worker: null, dateDone: null, price: defaultPrice, notes: '', type, moveIn };
-  }
-  return units;
+function dayStatus(d) {
+  const t = todayStr();
+  if (d < t) return 'done';
+  if (d === t) return 'today';
+  return 'upcoming';
 }
 
-// ── REAL UNIT DATA — MAYFLOWER (Make-Ready PDF, Apr 29 2026) ─────────────
-// Mayflower uses Bed/Bath format (1-BED/1-BATH, 2-BED/2-BATH, etc.) incl. 4-BED units
-const MAYFLOWER_UNIT_DATA = {
-  '4': [
-    ['401.A','2-BED/1-BATH',''],    ['401.B','2-BED/1-BATH',''],    ['402.A','1-BED/1-BATH',''],
-    ['403.A','2-BED/2-BATH',''],    ['403.B','2-BED/2-BATH',''],    ['404.A','3-BED/2-BATH','8/1'],
-    ['404.B','3-BED/2-BATH','8/1'], ['404.C','3-BED/2-BATH','8/1'], ['405.A','3-BED/2-BATH','8/1'],
-    ['405.B','3-BED/2-BATH','8/1'], ['405.C','3-BED/2-BATH','8/1'], ['406.A','2-BED/2-BATH','7/23'],
-    ['406.B','2-BED/2-BATH','7/23'],['407.A','1-BED/1-BATH','5/18'],['409.A','STUDIO','']
-  ],
-  '5': [
-    ['501.A','2-BED/1-BATH','8/1'], ['501.B','2-BED/1-BATH','8/1'], ['502.A','1-BED/1-BATH',''],
-    ['503.A','2-BED/2-BATH','8/1'], ['503.B','2-BED/2-BATH','8/1'], ['504.A','3-BED/2-BATH',''],
-    ['505.A','3-BED/2-BATH','8/1'], ['505.B','3-BED/2-BATH','8/1'], ['505.C','3-BED/2-BATH','8/1'],
-    ['506.A','2-BED/2-BATH','8/15'],['506.B','2-BED/2-BATH','8/15'],['508.A','4-BED/3-BATH','8/1'],
-    ['508.B','4-BED/3-BATH','8/1'], ['508.C','4-BED/3-BATH','8/1'], ['508.D','4-BED/3-BATH','8/1']
-  ],
-  '6': [
-    ['601.A','2-BED/1-BATH','8/1'], ['601.B','2-BED/1-BATH','8/1'], ['602.A','1-BED/1-BATH','8/1'],
-    ['603.A','2-BED/2-BATH',''],    ['603.B','2-BED/2-BATH',''],    ['604.A','3-BED/2-BATH','8/1'],
-    ['604.B','3-BED/2-BATH','8/1'], ['604.C','3-BED/2-BATH','8/1'], ['605.C','3-BED/2-BATH','8/1'],
-    ['606.A','2-BED/2-BATH','7/23'],['608.A','4-BED/3-BATH','8/1'], ['608.B','4-BED/3-BATH','8/1'],
-    ['608.C','4-BED/3-BATH','8/1'], ['608.D','4-BED/3-BATH','8/1']
-  ]
-};
-
-function makeMayflowerUnits(floorNum, defaultPrice) {
-  const units = {};
-  for (const [uid, type, moveIn] of (MAYFLOWER_UNIT_DATA[String(floorNum)] || [])) {
-    units[uid] = { status: 'not_started', worker: null, dateDone: null, price: defaultPrice, notes: '', type, moveIn };
-  }
-  return units;
+function fmtDate(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 }
 
-function makeProperty(id, name, color, dimColor, glowColor, defaultPrice) {
-  const floors = {};
-  for (const f of FLOORS) {
-    floors[String(f)] = id === 'coda'
-      ? makeCodaUnits(f, defaultPrice)
-      : makeMayflowerUnits(f, defaultPrice);
-  }
-  return { id, name, color, dimColor, glowColor, floors };
+function fmtMoney(n) { return '$' + n.toLocaleString(); }
+
+function typeShort(t) {
+  if (!t) return '';
+  if (t === 'STUDIO') return 'STU';
+  const m = t.match(/^(\d)-BED/);
+  return m ? m[1]+'B' : t.split('/')[0];
 }
 
-function buildDefaultState() {
-  return {
-    version: 3,
-    workers: [
-      { id: 'w1', name: 'Miguel'   },
-      { id: 'w2', name: 'Partner'  },
-      { id: 'w3', name: 'Worker 1' },
-      { id: 'w4', name: 'Worker 2' }
-    ],
-    settings: { defaultPrice: 150 },
-    properties: {
-      coda: makeProperty(
-        'coda', 'The Coda',
-        '#F59E0B', 'rgba(245,158,11,0.13)', 'rgba(245,158,11,0.25)',
-        150
-      ),
-      mayflower: makeProperty(
-        'mayflower', 'Mayflower',
-        '#38bdf8', 'rgba(56,189,248,0.12)', 'rgba(56,189,248,0.22)',
-        150
-      )
+// ── EARNINGS COMPUTE ────────────────────────────────────────────────
+function computeEarnings(filter) {
+  const t = todayStr(), m = monthStr();
+  let earn = 0, count = 0;
+  for (const day of SCHED) {
+    const st = dayStatus(day.date);
+    if (st === 'upcoming') continue;
+    if (filter === 'today' && day.date !== t) continue;
+    if (filter === 'month' && !day.date.startsWith(m)) continue;
+    earn += day.units.length * PRICE;
+    count += day.units.length;
+  }
+  return {earn, count};
+}
+
+function totalUnitsScheduled() {
+  return SCHED.reduce((a,d) => a + d.units.length, 0);
+}
+
+// ── RENDER EARNINGS ──────────────────────────────────────────────────
+function renderEarnings() {
+  const {earn:et, count:ct} = computeEarnings('today');
+  const {earn:em, count:cm} = computeEarnings('month');
+  const {earn:ea, count:ca} = computeEarnings('all');
+  document.getElementById('earnToday').textContent  = fmtMoney(et);
+  document.getElementById('unitsToday').textContent = ct + ' unit' + (ct!==1?'s':'') + ' completed';
+  document.getElementById('earnMonth').textContent  = fmtMoney(em);
+  document.getElementById('unitsMonth').textContent = cm + ' unit' + (cm!==1?'s':'') + ' this month';
+  document.getElementById('earnAll').textContent    = fmtMoney(ea);
+  document.getElementById('unitsDone').textContent  = ca;
+}
+
+// ── TODAY PANE ──────────────────────────────────────────────────────
+function renderToday() {
+  const t = todayStr();
+  const todayDay = SCHED.find(d => d.date === t);
+  const future = SCHED.filter(d => d.date > t);
+  const pane = document.getElementById('pane-today');
+  let html = '';
+
+  if (todayDay) {
+    const earn = todayDay.units.length * PRICE;
+    html += `<div class="today-banner">
+      <div class="tb-row">
+        <div><div class="tb-title">Today's Jobs</div><div class="tb-sub">${fmtDate(t)}</div></div>
+        <div class="tb-earn">${fmtMoney(earn)}</div>
+      </div>
+    </div>`;
+    for (const [u,type,bldg] of todayDay.units) {
+      const ic = bldg === 'The Coda' ? 'ic-coda' : 'ic-may';
+      const em = bldg === 'The Coda' ? '🏙' : '🏠';
+      html += `<div class="unit-row">
+        <div class="ul">
+          <div class="uicon ${ic}">${em}</div>
+          <div><div class="unum">Unit ${u}</div><div class="utype">${type} · ${bldg}</div></div>
+        </div>
+        <span class="status-pill sp-today">🔄 In Progress</span>
+      </div>`;
     }
-  };
-}
-
-// ── STATE ─────────────────────────────────────────────
-let state = {};
-let ui = {
-  activeTab:      'dashboard',
-  activeProperty: 'coda',
-  activeFloor:    '4',
-  editingUnit:    null   // { propId, floor, unitNum }
-};
-
-// Track modal status separately (avoids DOM re-renders)
-let _modalStatus = 'not_started';
-
-// ── STORAGE ───────────────────────────────────────────
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      // Deep merge saved data over defaults (handles new fields gracefully)
-      state = deepMerge(buildDefaultState(), saved);
-      return;
-    }
-  } catch(e) {}
-  state = buildDefaultState();
-}
-
-function deepMerge(target, source) {
-  if (!source || typeof source !== 'object' || Array.isArray(source)) return source ?? target;
-  const out = { ...target };
-  for (const k in source) {
-    if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
-      out[k] = deepMerge(out[k] ?? {}, source[k]);
-    } else {
-      out[k] = source[k];
-    }
-  }
-  return out;
-}
-
-// ── STATS ENGINE ──────────────────────────────────────
-function propStats(propId) {
-  const prop = state.properties[propId];
-  let total = 0, done = 0, inProg = 0, earned = 0;
-  for (const f of FLOORS) {
-    const units = prop.floors[String(f)] || {};
-    for (const uid in units) {
-      const u = units[uid];
-      total++;
-      if (u.status === 'done')        { done++; earned += (u.price || 0); }
-      if (u.status === 'in_progress')   inProg++;
-    }
-  }
-  return { total, done, inProg, notStarted: total - done - inProg, earned };
-}
-
-function floorStats(propId, floor) {
-  const units = state.properties[propId].floors[String(floor)] || {};
-  let total = 0, done = 0, inProg = 0;
-  for (const uid in units) {
-    total++;
-    if (units[uid].status === 'done')        done++;
-    if (units[uid].status === 'in_progress') inProg++;
-  }
-  return { total, done, inProg, notStarted: total - done - inProg };
-}
-
-function workerStats(wid) {
-  let assigned = 0, done = 0, earned = 0;
-  for (const pid in state.properties) {
-    const prop = state.properties[pid];
-    for (const f of FLOORS) {
-      const units = prop.floors[String(f)] || {};
-      for (const uid in units) {
-        const u = units[uid];
-        if (u.worker === wid) {
-          assigned++;
-          if (u.status === 'done') { done++; earned += (u.price || 0); }
-        }
-      }
-    }
-  }
-  return { assigned, done, earned };
-}
-
-function globalStats() {
-  const c = propStats('coda');
-  const m = propStats('mayflower');
-  return {
-    total: c.total + m.total, done: c.done + m.done,
-    inProg: c.inProg + m.inProg, notStarted: c.notStarted + m.notStarted,
-    earned: c.earned + m.earned, coda: c, mayflower: m
-  };
-}
-
-// ── FORMATTERS ────────────────────────────────────────
-const fmt$ = n => '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
-const pct  = (a, b) => b === 0 ? 0 : Math.round((a / b) * 100);
-const esc  = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const initials = name => name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
-
-function workerName(wid) {
-  if (!wid) return '—';
-  const w = state.workers.find(w => w.id === wid);
-  return w ? w.name : '—';
-}
-
-function fmtDate(s) {
-  if (!s) return null;
-  const d = new Date(s + 'T12:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-let _toastTimer;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
-}
-
-// ── RENDER ROUTER ─────────────────────────────────────
-function render() {
-  // Nav state
-  document.querySelectorAll('.nav-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === ui.activeTab)
-  );
-  // Tab visibility
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${ui.activeTab}`).classList.add('active');
-
-  updatePropBadge();
-
-  switch (ui.activeTab) {
-    case 'dashboard': renderDashboard(); break;
-    case 'units':     renderUnits();     break;
-    case 'workers':   renderWorkers();   break;
-    case 'settings':  renderSettings();  break;
-  }
-}
-
-function updatePropBadge() {
-  const badge = document.getElementById('prop-badge');
-  if (ui.activeTab === 'units') {
-    const p = state.properties[ui.activeProperty];
-    badge.textContent = p.name;
-    badge.style.cssText = `
-      display: block;
-      background: ${p.dimColor};
-      color: ${p.color};
-      border: 1.5px solid ${p.color}50;
-      box-shadow: 0 0 10px ${p.glowColor};
-    `;
   } else {
-    badge.style.display = 'none';
+    html += `<div class="no-units"><div class="no-big">✅</div>No units today.<br><span style="font-size:13px">Rest up or push leads.</span></div>`;
   }
-}
 
-// ── DASHBOARD ─────────────────────────────────────────
-function renderDashboard() {
-  const g = globalStats();
-  const dp = pct(g.done, g.total);
-
-  // SVG ring
-  const R = 40, C = 2 * Math.PI * R;
-  const doneDash  = (g.done  / g.total) * C;
-  const progDash  = (g.inProg / g.total) * C;
-  const progOff   = C - doneDash;
-  const baseOff   = C - doneDash - progDash;
-
-  const ringSVG = `
-    <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10"/>
-      <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--yellow)" stroke-width="10"
-        stroke-dasharray="${progDash} ${C - progDash}"
-        stroke-dashoffset="${progOff}"
-        stroke-linecap="round"
-        transform="rotate(-90 50 50)"/>
-      <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--green)" stroke-width="10"
-        stroke-dasharray="${doneDash} ${C - doneDash}"
-        stroke-dashoffset="${C}"
-        stroke-linecap="round"
-        transform="rotate(-90 50 50)"/>
-      <text x="50" y="47" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" font-size="17" fill="var(--amber)">${dp}%</text>
-      <text x="50" y="60" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="8" fill="var(--text-muted)">DONE</text>
-    </svg>
-  `;
-
-  document.getElementById('tab-dashboard').innerHTML = `
-
-    <div class="section-title">Overall — Both Properties</div>
-
-    <div class="progress-card">
-      <div class="ring-wrap">
-        ${ringSVG}
-        <div class="ring-legend">
-          <div class="ring-item">
-            <div class="ring-dot" style="background:var(--green)"></div>
-            <span class="ring-val" style="color:var(--green)">${g.done}</span>
-            <span class="ring-lbl">Done</span>
+  if (future.length > 0) {
+    const next = future[0];
+    const days = Math.round((new Date(next.date+'T12:00:00') - new Date()) / 86400000);
+    html += `<div class="next-up">
+      <div class="next-label">Next Job Day — ${days} day${days!==1?'s':''} away</div>
+      <div class="next-row">
+        <div class="next-date">${fmtDate(next.date)}</div>
+        <div class="next-earn">${fmtMoney(next.units.length * PRICE)} · ${next.units.length} unit${next.units.length!==1?'s':''}</div>
+      </div>
+      <div class="next-units-list">
+        ${next.units.slice(0,4).map(([u,type,bldg])=>`
+        <div class="unit-row" style="margin-bottom:0">
+          <div class="ul">
+            <div class="uicon ${bldg==='The Coda'?'ic-coda':'ic-may'}">${bldg==='The Coda'?'🏙':'🏠'}</div>
+            <div><div class="unum">Unit ${u}</div><div class="utype">${type}</div></div>
           </div>
-          <div class="ring-item">
-            <div class="ring-dot" style="background:var(--yellow)"></div>
-            <span class="ring-val" style="color:var(--yellow)">${g.inProg}</span>
-            <span class="ring-lbl">In Progress</span>
-          </div>
-          <div class="ring-item">
-            <div class="ring-dot" style="background:rgba(255,255,255,0.15)"></div>
-            <span class="ring-val" style="color:var(--text-muted)">${g.notStarted}</span>
-            <span class="ring-lbl">Not Started</span>
-          </div>
-          <div class="ring-item">
-            <div class="ring-dot" style="background:var(--amber)"></div>
-            <span class="ring-val" style="color:var(--amber)">${fmt$(g.earned)}</span>
-            <span class="ring-lbl">Earned</span>
-          </div>
-        </div>
+          <span class="status-pill sp-upcoming">📅 ${bldg==='The Coda'?'Coda':'May'}</span>
+        </div>`).join('')}
+        ${next.units.length > 4 ? `<div style="text-align:center;font-size:12px;color:var(--dim);padding:6px">+ ${next.units.length-4} more units</div>` : ''}
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width:${dp}%"></div>
-      </div>
-    </div>
-
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-val">${g.total}</div>
-        <div class="stat-lbl">Total Units</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--green)">${g.done}</div>
-        <div class="stat-lbl">Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--yellow)">${g.inProg}</div>
-        <div class="stat-lbl">In Progress</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--amber)">${fmt$(g.earned)}</div>
-        <div class="stat-lbl">$ Earned</div>
-      </div>
-    </div>
-
-    <div class="section-title">The Coda — Separate Tracking</div>
-    ${renderPropBreakdown('coda', g.coda)}
-
-    <div class="section-title">Mayflower — Separate Tracking</div>
-    ${renderPropBreakdown('mayflower', g.mayflower)}
-
-    <div class="section-title">Team Performance</div>
-    ${renderWorkersOnDashboard()}
-
-    <div style="height:20px"></div>
-  `;
-}
-
-function renderPropBreakdown(propId, s) {
-  const prop = state.properties[propId];
-  const p = pct(s.done, s.total);
-  const totalEst = s.total * (state.settings.defaultPrice || 150);
-
-  return `
-    <div class="prop-breakdown" data-action="goto-prop" data-prop="${propId}">
-      <div class="prop-bd-header">
-        <div class="prop-bd-left">
-          <div class="prop-bd-name" style="color:${prop.color}">${prop.name}</div>
-          <div class="prop-bd-sub">Floors 4, 5, 6 &nbsp;·&nbsp; ${s.total} units &nbsp;·&nbsp; tap to view →</div>
-        </div>
-        <div class="prop-bd-earned" style="color:${prop.color}">${fmt$(s.earned)}</div>
-      </div>
-      <div class="prop-mini-stats">
-        <div class="prop-mini-stat">
-          <div class="prop-mini-val" style="color:var(--green)">${s.done}</div>
-          <div class="prop-mini-lbl">Done</div>
-        </div>
-        <div class="prop-mini-stat">
-          <div class="prop-mini-val" style="color:var(--yellow)">${s.inProg}</div>
-          <div class="prop-mini-lbl">In Prog</div>
-        </div>
-        <div class="prop-mini-stat">
-          <div class="prop-mini-val" style="color:var(--text-muted)">${s.notStarted}</div>
-          <div class="prop-mini-lbl">Pending</div>
-        </div>
-        <div class="prop-mini-stat">
-          <div class="prop-mini-val" style="color:${prop.color}">${p}%</div>
-          <div class="prop-mini-lbl">Done</div>
-        </div>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width:${p}%;background:${prop.color}"></div>
-      </div>
-    </div>
-  `;
-}
-
-function renderWorkersOnDashboard() {
-  const cards = state.workers.map(w => {
-    const ws = workerStats(w.id);
-    if (ws.assigned === 0) return '';
-    return `
-      <div class="worker-card">
-        <div class="worker-avatar">${initials(w.name)}</div>
-        <div class="worker-info">
-          <div class="worker-name">${esc(w.name)}</div>
-          <div class="worker-stats">${ws.assigned} assigned &nbsp;·&nbsp; ${ws.done} done</div>
-        </div>
-        <div class="worker-earned">${fmt$(ws.earned)}</div>
-      </div>`;
-  }).join('');
-  return cards || `<div class="empty-state"><div class="empty-icon">👷</div>No units assigned yet.</div>`;
-}
-
-// ── UNITS TAB ─────────────────────────────────────────
-function renderUnits() {
-  const prop  = state.properties[ui.activeProperty];
-  const units = prop.floors[ui.activeFloor] || {};
-
-  // Floor summary pills
-  const floorPills = FLOORS.map(f => {
-    const fs = floorStats(ui.activeProperty, f);
-    let cls = '';
-    if (fs.done === fs.total) cls = 'done';
-    else if (fs.inProg > 0 || fs.done > 0) cls = 'prog';
-    return `<div class="fl-pill ${cls}">Fl.${f}: ${fs.done}/${fs.total}</div>`;
-  }).join('');
-
-  // Floor tabs
-  const floorTabsHTML = FLOORS.map(f => {
-    const fs = floorStats(ui.activeProperty, f);
-    const isActive = ui.activeFloor === String(f);
-    const allDone = fs.done === fs.total && fs.total > 0;
-    return `
-      <button class="floor-tab ${isActive ? 'active' : ''} ${allDone && !isActive ? 'fl-all-done' : ''}"
-              data-action="set-floor" data-floor="${f}">
-        Floor ${f}
-        ${fs.done > 0 ? `<span class="fl-badge">${fs.done}</span>` : ''}
-      </button>`;
-  }).join('');
-
-  // Unit cards
-  const typeShort = t => {
-    if (!t) return '';
-    if (t === 'STUDIO') return 'STU';
-    const m = t.match(/^(\d)-BED/);
-    return m ? m[1]+'B' : '';
-  };
-  const unitCards = Object.entries(units).map(([num, u]) => {
-    const wn    = workerName(u.worker);
-    const dt    = u.dateDone ? fmtDate(u.dateDone) : null;
-    const ts    = u.type ? typeShort(u.type) : '';
-    const mi    = u.moveIn ? u.moveIn : '';
-    return `
-      <div class="unit-card st-${u.status}"
-           data-action="open-unit"
-           data-prop="${ui.activeProperty}"
-           data-floor="${ui.activeFloor}"
-           data-unit="${num}">
-        <div class="unit-num">${num}</div>
-        ${ts ? `<div style="font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;line-height:1;margin-top:1px">${ts}${mi ? ' · '+mi : ''}</div>` : ''}
-        <div class="unit-badge badge-${u.status}">${STATUS_META[u.status].short}</div>
-        <div class="unit-worker">${esc(wn)}</div>
-        <div class="unit-price">${fmt$(u.price)}</div>
-        ${dt ? `<div class="unit-date">${dt}</div>` : ''}
-      </div>`;
-  }).join('');
-
-  document.getElementById('tab-units').innerHTML = `
-
-    <!-- Property toggle — CRYSTAL CLEAR which building -->
-    <div class="prop-toggle">
-      <button class="prop-toggle-btn ${ui.activeProperty === 'coda' ? 'active-coda' : ''}"
-              data-action="set-prop" data-prop="coda">
-        🏢 The Coda
-      </button>
-      <button class="prop-toggle-btn ${ui.activeProperty === 'mayflower' ? 'active-may' : ''}"
-              data-action="set-prop" data-prop="mayflower">
-        🏗️ Mayflower
-      </button>
-    </div>
-
-    <!-- Floor progress at a glance -->
-    <div class="floor-strip">${floorPills}</div>
-
-    <!-- Floor selector -->
-    <div class="floor-tabs">${floorTabsHTML}</div>
-
-    <!-- Unit grid -->
-    <div class="unit-grid">${unitCards}</div>
-
-    <div style="height:16px"></div>
-  `;
-}
-
-// ── WORKERS TAB ───────────────────────────────────────
-function renderWorkers() {
-  const cards = state.workers.map(w => {
-    const ws = workerStats(w.id);
-    return `
-      <div class="worker-card">
-        <div class="worker-avatar">${initials(w.name)}</div>
-        <div class="worker-info">
-          <div class="worker-name">${esc(w.name)}</div>
-          <div class="worker-stats">
-            ${ws.assigned} assigned &nbsp;·&nbsp; ${ws.done} complete &nbsp;·&nbsp; ${ws.assigned - ws.done} remaining
-          </div>
-        </div>
-        <div class="worker-earned">${fmt$(ws.earned)}</div>
-      </div>`;
-  }).join('');
-
-  document.getElementById('tab-workers').innerHTML = `
-    <div class="section-title">Team Performance</div>
-    ${cards || `<div class="empty-state"><div class="empty-icon">👷</div>No workers added yet.</div>`}
-    <div style="height:20px"></div>
-  `;
-}
-
-// ── SETTINGS TAB ──────────────────────────────────────
-function renderSettings() {
-  const workerRows = state.workers.map(w => `
-    <div class="worker-list-item">
-      <div class="worker-list-avatar">${initials(w.name)}</div>
-      <input class="worker-name-input" type="text" value="${esc(w.name)}"
-             data-action="rename-worker" data-id="${w.id}" placeholder="Worker name" maxlength="30"/>
-      <button class="remove-btn" data-action="remove-worker" data-id="${w.id}" title="Remove">✕</button>
-    </div>`).join('');
-
-  document.getElementById('tab-settings').innerHTML = `
-    <div class="section-title">Workers</div>
-    <div class="settings-card">
-      ${workerRows}
-      <div class="add-worker-row">
-        <input class="add-worker-input" id="new-worker-input" type="text"
-               placeholder="Add new worker name..." maxlength="30"/>
-        <button class="add-btn" data-action="add-worker">+ Add</button>
-      </div>
-    </div>
-
-    <div class="section-title">Default Pricing</div>
-    <div class="settings-card">
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label">Default Price Per Unit</div>
-          <div class="settings-row-sub">Applied to new units (update per unit in Units tab)</div>
-        </div>
-        <input class="settings-input" type="number" id="default-price"
-               value="${state.settings.defaultPrice}" min="0" max="9999" step="5"/>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label">Apply to ALL Units</div>
-          <div class="settings-row-sub">Overwrite every unit's price with above amount</div>
-        </div>
-        <button class="settings-action" data-action="apply-price-all">Apply All</button>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label">Save Default</div>
-          <div class="settings-row-sub">Save default for new units only</div>
-        </div>
-        <button class="settings-action" data-action="save-default-price">Save</button>
-      </div>
-    </div>
-
-    <div class="section-title">Export & Backup</div>
-    <div class="settings-card">
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label">Export CSV</div>
-          <div class="settings-row-sub">All units — both properties</div>
-        </div>
-        <button class="settings-action" data-action="export-csv">Export</button>
-      </div>
-    </div>
-
-    <div class="section-title" style="color:var(--red)">Danger Zone</div>
-    <div class="settings-card" style="border-color:rgba(239,68,68,0.2)">
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-row-label" style="color:var(--red)">Reset All Data</div>
-          <div class="settings-row-sub">Clears all progress — cannot be undone</div>
-        </div>
-        <button class="danger-action" data-action="reset-data">Reset</button>
-      </div>
-    </div>
-
-    <div style="height:20px"></div>
-  `;
-}
-
-// ── MODAL ─────────────────────────────────────────────
-function openUnitModal(propId, floor, unitNum) {
-  ui.editingUnit = { propId, floor, unitNum };
-  const u    = state.properties[propId].floors[floor][unitNum];
-  const prop = state.properties[propId];
-  _modalStatus = u.status;
-
-  const typeLabel  = u.type && u.type !== 'TBD' ? ` &nbsp;<span style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;color:var(--text-muted)">${u.type}</span>` : '';
-  const moveInStr  = u.moveIn ? ` &nbsp;·&nbsp; <span style="color:var(--amber)">Move-in: ${u.moveIn}</span>` : '';
-  document.getElementById('modal-content').innerHTML = `
-    <div class="modal-unit-header">
-      <div>
-        <div class="modal-unit-num">Unit ${unitNum}${typeLabel}</div>
-        <div class="modal-unit-prop" style="color:${prop.color}">${prop.name} &nbsp;·&nbsp; Floor ${floor}${moveInStr}</div>
-      </div>
-      <button class="modal-close" data-action="close-modal">✕</button>
-    </div>
-
-    <div class="form-group">
-      <label class="form-lbl">Status</label>
-      <div class="status-sel">
-        <button class="status-btn sel-ns ${u.status === 'not_started' ? 'picked' : ''}"
-                data-action="modal-status" data-status="not_started">
-          <span class="emoji">🔴</span>Not Started
-        </button>
-        <button class="status-btn sel-ip ${u.status === 'in_progress' ? 'picked' : ''}"
-                data-action="modal-status" data-status="in_progress">
-          <span class="emoji">🟡</span>In Progress
-        </button>
-        <button class="status-btn sel-dn ${u.status === 'done' ? 'picked' : ''}"
-                data-action="modal-status" data-status="done">
-          <span class="emoji">🟢</span>Done
-        </button>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-lbl">Assigned To</label>
-      <select class="form-ctrl" id="modal-worker">
-        <option value="">— Unassigned —</option>
-        ${state.workers.map(w =>
-          `<option value="${w.id}" ${u.worker === w.id ? 'selected' : ''}>${esc(w.name)}</option>`
-        ).join('')}
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label class="form-lbl">Price ($)</label>
-      <input class="form-ctrl" type="number" id="modal-price"
-             value="${u.price}" min="0" max="9999" step="5"/>
-    </div>
-
-    <div class="form-group">
-      <label class="form-lbl">Date Done</label>
-      <input class="form-ctrl" type="date" id="modal-date"
-             value="${u.dateDone || ''}"/>
-    </div>
-
-    <div class="form-group">
-      <label class="form-lbl">Notes</label>
-      <textarea class="form-ctrl" id="modal-notes"
-                placeholder="Any notes about this unit...">${esc(u.notes)}</textarea>
-    </div>
-
-    <button class="btn-save" data-action="save-unit">💾 &nbsp;Save Unit</button>
-    <button class="btn-cancel" data-action="close-modal">Cancel</button>
-    <div style="height:8px"></div>
-  `;
-
-  document.getElementById('modal-overlay').classList.add('open');
-  // Focus first input after animation
-  setTimeout(() => {
-    const sel = document.getElementById('modal-worker');
-    if (sel) sel.focus();
-  }, 320);
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-  ui.editingUnit = null;
-}
-
-function saveUnit() {
-  if (!ui.editingUnit) return;
-  const { propId, floor, unitNum } = ui.editingUnit;
-
-  const status   = _modalStatus;
-  const worker   = document.getElementById('modal-worker').value || null;
-  const price    = parseFloat(document.getElementById('modal-price').value) || 0;
-  const notes    = document.getElementById('modal-notes').value.trim();
-  let   dateDone = document.getElementById('modal-date').value || null;
-
-  // Auto-timestamp when marking done
-  if (status === 'done' && !dateDone) {
-    dateDone = new Date().toISOString().split('T')[0];
+    </div>`;
   }
-  // Clear date if not done
-  if (status !== 'done') dateDone = null;
-
-  state.properties[propId].floors[floor][unitNum] = { status, worker, dateDone, price, notes };
-  saveState();
-  closeModal();
-  render();
-  showToast(`Unit ${unitNum} → ${STATUS_META[status].label} ✓`);
+  pane.innerHTML = html;
 }
 
-// ── ACTIONS ───────────────────────────────────────────
-function addWorker() {
-  const input = document.getElementById('new-worker-input');
-  const name  = input.value.trim();
-  if (!name) { input.focus(); return; }
-  state.workers.push({ id: 'w' + Date.now(), name });
-  saveState();
-  render();
-  showToast(`"${name}" added to team`);
+// ── HISTORY PANE ────────────────────────────────────────────────────
+function renderHistory() {
+  const t = todayStr();
+  const past = SCHED.filter(d => d.date <= t).reverse();
+  const pane = document.getElementById('pane-history');
+  if (!past.length) { pane.innerHTML = '<div class="no-units"><div class="no-big">📭</div>No completed jobs yet.</div>'; return; }
+
+  // Group by month
+  const months = {};
+  for (const day of past) {
+    const mk = day.date.slice(0,7);
+    if (!months[mk]) months[mk] = [];
+    months[mk].push(day);
+  }
+
+  let html = '';
+  for (const [mk, days] of Object.entries(months).sort((a,b) => b[0] < a[0] ? -1 : 1)) {
+    const mEarn = days.reduce((a,d) => a + d.units.length * PRICE, 0);
+    const mCount = days.reduce((a,d) => a + d.units.length, 0);
+    const mName = new Date(mk+'-15').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    html += `<div class="hist-month">
+      <div class="month-hdr">
+        <div class="month-name">${mName}</div>
+        <div class="month-earn">${fmtMoney(mEarn)} · ${mCount} units</div>
+      </div>`;
+    for (const day of days) {
+      const earn = day.units.length * PRICE;
+      const st = dayStatus(day.date);
+      const dotColor = st === 'done' ? 'var(--green)' : 'var(--amber)';
+      const id = 'jd_' + day.date.replace(/-/g,'');
+      html += `<div class="job-day">
+        <div class="jd-header" onclick="toggleDay('${id}')">
+          <div class="jd-left">
+            <div class="jd-dot" style="background:${dotColor}"></div>
+            <div>
+              <div class="jd-date">${fmtDate(day.date)}</div>
+              <div class="jd-count">${day.units.length} unit${day.units.length!==1?'s':''} · ${st === 'done' ? '✅ Done' : '🔄 Today'}</div>
+            </div>
+          </div>
+          <div class="jd-right">
+            <div class="jd-earn" style="color:${st==='done'?'var(--green)':'var(--amber)'}">${fmtMoney(earn)}</div>
+            <div id="chev_${id}" class="jd-chevron">▼</div>
+          </div>
+        </div>
+        <div class="jd-units" id="${id}">
+          ${day.units.map(([u,type,bldg]) => `
+          <div class="unit-row">
+            <div class="ul">
+              <div class="uicon ${bldg==='The Coda'?'ic-coda':'ic-may'}">${bldg==='The Coda'?'🏙':'🏠'}</div>
+              <div><div class="unum">Unit ${u}</div><div class="utype">${type} · ${bldg}</div></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:14px;font-weight:700;color:var(--green)">${fmtMoney(PRICE)}</div>
+              <div style="font-size:10px;color:var(--dim)">${typeShort(type)}</div>
+            </div>
+          </div>`).join('')}
+          <div style="text-align:right;padding:8px 2px 4px;font-size:13px;font-weight:700;color:var(--green)">Day Total: ${fmtMoney(earn)}</div>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  pane.innerHTML = html;
 }
 
-function removeWorker(id) {
-  const w = state.workers.find(w => w.id === id);
-  if (!w) return;
-  if (!confirm(`Remove "${w.name}" from the team?\n\nTheir units will be unassigned.`)) return;
+function toggleDay(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev_' + id);
+  el.classList.toggle('open');
+  chev.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : '';
+}
 
-  state.workers = state.workers.filter(w => w.id !== id);
-  // Unassign from all units
-  for (const pid in state.properties) {
-    for (const f of FLOORS) {
-      const units = state.properties[pid].floors[String(f)] || {};
-      for (const uid in units) {
-        if (units[uid].worker === id) units[uid].worker = null;
-      }
+// ── SUMMARY PANE ────────────────────────────────────────────────────
+function renderSummary() {
+  const pane = document.getElementById('pane-summary');
+  const totalSched = totalUnitsScheduled();
+  const {earn:ea, count:ca} = computeEarnings('all');
+  const remaining = totalSched - ca;
+  const projectedTotal = totalSched * PRICE;
+  const pct = Math.round((ca / totalSched) * 100);
+
+  // By building
+  let codaDone = 0, mayDone = 0, codaTotal = 0, mayTotal = 0;
+  const t = todayStr();
+  for (const day of SCHED) {
+    const done = day.date <= t;
+    for (const [,, bldg] of day.units) {
+      if (bldg === 'The Coda') { codaTotal++; if(done) codaDone++; }
+      else { mayTotal++; if(done) mayDone++; }
     }
   }
-  saveState();
-  render();
-  showToast('Worker removed');
+
+  // Monthly breakdown
+  const byMonth = {};
+  for (const day of SCHED) {
+    if (day.date > t) continue;
+    const mk = day.date.slice(0,7);
+    if (!byMonth[mk]) byMonth[mk] = {earn:0, count:0};
+    byMonth[mk].earn += day.units.length * PRICE;
+    byMonth[mk].count += day.units.length;
+  }
+
+  let html = `
+  <div class="sum-section">
+    <div class="sum-title">Season Progress</div>
+    <div class="sum-grid">
+      <div class="sum-card"><div class="sc-label">Units Done</div><div class="sc-num col-green">${ca}</div></div>
+      <div class="sum-card"><div class="sc-label">Units Left</div><div class="sc-num col-amber">${remaining}</div></div>
+      <div class="sum-card"><div class="sc-label">Earned</div><div class="sc-num col-gold">${fmtMoney(ea)}</div></div>
+      <div class="sum-card"><div class="sc-label">Projected Total</div><div class="sc-num col-blue">${fmtMoney(projectedTotal)}</div></div>
+    </div>
+    <div style="margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600">Season Completion</span>
+        <span style="font-size:13px;font-weight:700;color:var(--gold)">${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--gold)"></div></div>
+    </div>
+  </div>
+
+  <div class="sum-section">
+    <div class="sum-title">By Building</div>
+    <div class="sum-grid">
+      <div class="sum-card">
+        <div class="sc-label">The Coda</div>
+        <div class="sc-num col-blue">${codaDone}<span style="font-size:14px;color:var(--dim)">/${codaTotal}</span></div>
+        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${Math.round(codaDone/codaTotal*100)}%;background:var(--blue)"></div></div>
+      </div>
+      <div class="sum-card">
+        <div class="sc-label">Mayflower</div>
+        <div class="sc-num col-amber">${mayDone}<span style="font-size:14px;color:var(--dim)">/${mayTotal}</span></div>
+        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${Math.round(mayDone/mayTotal*100)}%;background:var(--amber)"></div></div>
+      </div>
+    </div>
+  </div>`;
+
+  if (Object.keys(byMonth).length > 0) {
+    html += `<div class="sum-section"><div class="sum-title">Monthly Breakdown</div>`;
+    for (const [mk, data] of Object.entries(byMonth).sort((a,b) => a[0]<b[0]?-1:1)) {
+      const mName = new Date(mk+'-15').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      html += `<div class="job-day" style="margin-bottom:8px">
+        <div class="jd-header" style="cursor:default">
+          <div class="jd-date">${mName}</div>
+          <div class="jd-right">
+            <div class="jd-earn col-green">${fmtMoney(data.earn)}</div>
+            <div class="jd-count">${data.count} units</div>
+          </div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  pane.innerHTML = html;
 }
 
-function exportCSV() {
-  const rows = [
-    ['Property','Floor','Unit #','Status','Worker','Price ($)','Date Done','Notes']
-  ];
-  for (const pid in state.properties) {
-    const prop = state.properties[pid];
-    for (const f of FLOORS) {
-      const units = prop.floors[String(f)] || {};
-      for (const uid in units) {
-        const u = units[uid];
-        rows.push([
-          prop.name, f, uid,
-          STATUS_META[u.status].label,
-          workerName(u.worker),
-          u.price,
-          u.dateDone || '',
-          u.notes.replace(/\n/g,' ').replace(/,/g,';')
-        ]);
-      }
-    }
-  }
-  const csv  = rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), {
-    href: url, download: `TPS_Unit_Export_${new Date().toISOString().slice(0,10)}.csv`
+// ── TABS & FILTERS ──────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('on', ['today','history','summary'][i] === name);
   });
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('CSV exported ✓');
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.getElementById('pane-'+name).classList.add('on');
 }
 
-function applyPriceAll() {
-  const price = parseFloat(document.getElementById('default-price').value) || 0;
-  if (!confirm(`Set ALL unit prices to ${fmt$(price)}? This will overwrite existing prices.`)) return;
-  for (const pid in state.properties) {
-    for (const f of FLOORS) {
-      const units = state.properties[pid].floors[String(f)] || {};
-      for (const uid in units) units[uid].price = price;
-    }
-  }
-  state.settings.defaultPrice = price;
-  saveState();
-  render();
-  showToast(`All units set to ${fmt$(price)}`);
+function setFilter(f) {
+  ['today','month','all'].forEach(k => {
+    const el = document.getElementById('filter'+k.charAt(0).toUpperCase()+k.slice(1));
+    if (el) el.classList.toggle('active', k === f);
+  });
 }
 
-function resetData() {
-  if (!confirm('⚠️ RESET ALL DATA?\n\nThis will erase all unit progress, assignments, and dates for BOTH properties. This cannot be undone.')) return;
-  state = buildDefaultState();
-  saveState();
-  ui.activeTab = 'dashboard';
-  render();
-  showToast('All data reset');
+// ── INIT ─────────────────────────────────────────────────────────────
+function init() {
+  const now = new Date();
+  document.getElementById('hdrDate').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  renderEarnings();
+  renderToday();
+  renderHistory();
+  renderSummary();
 }
 
-// ── EVENT DELEGATION ──────────────────────────────────
-document.addEventListener('click', e => {
-  const el = e.target.closest('[data-action]');
-  if (!el) return;
-  const { action } = el.dataset;
-
-  switch (action) {
-
-    // Units tab
-    case 'open-unit':
-      openUnitModal(el.dataset.prop, el.dataset.floor, el.dataset.unit);
-      break;
-    case 'set-prop':
-      ui.activeProperty = el.dataset.prop;
-      ui.activeFloor    = '4';
-      render();
-      break;
-    case 'set-floor':
-      ui.activeFloor = el.dataset.floor;
-      render();
-      break;
-
-    // Dashboard → go to property
-    case 'goto-prop':
-      ui.activeTab      = 'units';
-      ui.activeProperty = el.dataset.prop;
-      ui.activeFloor    = '4';
-      render();
-      break;
-
-    // Modal
-    case 'modal-status':
-      _modalStatus = el.dataset.status;
-      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('picked'));
-      el.classList.add('picked');
-      break;
-    case 'save-unit':   saveUnit();   break;
-    case 'close-modal': closeModal(); break;
-
-    // Workers
-    case 'add-worker':    addWorker();                break;
-    case 'remove-worker': removeWorker(el.dataset.id); break;
-
-    // Settings
-    case 'save-default-price': {
-      const v = parseFloat(document.getElementById('default-price').value) || 0;
-      state.settings.defaultPrice = v;
-      saveState();
-      showToast(`Default price saved: ${fmt$(v)}`);
-      break;
-    }
-    case 'apply-price-all': applyPriceAll(); break;
-    case 'export-csv':      exportCSV();     break;
-    case 'reset-data':      resetData();     break;
-  }
-});
-
-// Bottom nav
-document.querySelectorAll('.nav-btn').forEach(btn =>
-  btn.addEventListener('click', function() {
-    ui.activeTab = this.dataset.tab;
-    render();
-  })
-);
-
-// Rename worker on blur
-document.addEventListener('change', e => {
-  const el = e.target.closest('[data-action="rename-worker"]');
-  if (!el) return;
-  const name = el.value.trim() || 'Worker';
-  const w = state.workers.find(w => w.id === el.dataset.id);
-  if (w && w.name !== name) { w.name = name; saveState(); showToast(`Renamed to "${name}"`); }
-});
-
-// Enter key for add-worker
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    if (document.activeElement.id === 'new-worker-input') addWorker();
-  }
-  if (e.key === 'Escape') closeModal();
-});
-
-// Close modal on overlay tap
-document.getElementById('modal-overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-// ── BOOT ──────────────────────────────────────────────
-loadState();
-render();
-console.log('%c TPS PRO LLC — Unit Turn Tracker loaded ', 'background:#F59E0B;color:#0d1117;font-weight:900;font-size:13px;border-radius:4px;padding:2px 6px');
+init();
+// Auto-refresh every 5 minutes
+setInterval(init, 300000);
 </script>
 </body>
 </html>
