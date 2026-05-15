@@ -208,6 +208,43 @@ function unitPrice(type) {
   return 195; // 1-BED, 1-BED/1-BATH, STUDIO
 }
 
+// ── FORECAST ─────────────────────────────────────────────────────────
+let forecastMode = 'week';
+
+function setForecastMode(mode) {
+  forecastMode = mode;
+  renderSummary();
+}
+
+function computeForecast() {
+  const t = todayStr();
+  const upcoming = SCHED.filter(d => d.date > t);
+  const groups = {};
+  for (const day of upcoming) {
+    let key, label;
+    if (forecastMode === 'week') {
+      const dt = new Date(day.date + 'T12:00:00');
+      const dow = (dt.getDay() + 6) % 7;
+      const mon = new Date(dt); mon.setDate(dt.getDate() - dow);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      key = mon.toISOString().split('T')[0];
+      const ml = mon.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const sl = sun.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      label = 'Week of ' + ml;
+    } else {
+      key = day.date.slice(0,7);
+      label = new Date(key+'-15').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    }
+    if (!groups[key]) groups[key] = {label, coda:0, codaU:0, may:0, mayU:0};
+    for (const [,type,bldg] of day.units) {
+      const p = unitPrice(type);
+      if (bldg === 'The Coda') { groups[key].coda += p; groups[key].codaU++; }
+      else { groups[key].may += p; groups[key].mayU++; }
+    }
+  }
+  return groups;
+}
+
 // ── HELPERS ─────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0];
 const monthStr = () => todayStr().slice(0,7);
@@ -423,7 +460,49 @@ function renderSummary() {
     byMonth[mk].count += day.units.length;
   }
 
+  // ── FORECAST SECTION ──
+  const fGroups = computeForecast();
+  const fKeys = Object.keys(fGroups).sort();
+  const btnBase = 'border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;';
+  const btnOn  = btnBase + 'background:var(--gold);color:#000;';
+  const btnOff = btnBase + 'background:var(--card2);color:var(--dim);';
+
+  let fHtml = '';
+  if (!fKeys.length) {
+    fHtml = '<div style="color:var(--dim);text-align:center;padding:16px;font-size:13px">No upcoming jobs scheduled</div>';
+  } else {
+    for (const k of fKeys) {
+      const g = fGroups[k];
+      const total = g.coda + g.may;
+      fHtml += `<div style="background:var(--card2);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700">${g.label}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--gold)">${fmtMoney(total)}</div>
+        </div>
+        ${g.coda > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;background:var(--card);border-radius:9px;padding:9px 12px">
+          <span style="color:var(--blue)">🏙 The Coda &nbsp;·&nbsp; ${g.codaU} unit${g.codaU!==1?'s':''}</span>
+          <span style="color:var(--blue);font-weight:700">${fmtMoney(g.coda)}</span>
+        </div>` : ''}
+        ${g.may > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;background:var(--card);border-radius:9px;padding:9px 12px">
+          <span style="color:var(--amber)">🏠 Mayflower &nbsp;·&nbsp; ${g.mayU} unit${g.mayU!==1?'s':''}</span>
+          <span style="color:var(--amber);font-weight:700">${fmtMoney(g.may)}</span>
+        </div>` : ''}
+      </div>`;
+    }
+  }
+
   let html = `
+  <div class="sum-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="sum-title" style="margin:0">Forecast</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="setForecastMode('week')" style="${forecastMode==='week'?btnOn:btnOff}">Week</button>
+        <button onclick="setForecastMode('month')" style="${forecastMode==='month'?btnOn:btnOff}">Month</button>
+      </div>
+    </div>
+    ${fHtml}
+  </div>
+
   <div class="sum-section">
     <div class="sum-title">Season Progress</div>
     <div class="sum-grid">
