@@ -264,16 +264,23 @@ function saveLiveSched() {
 
 // ── MIGRATE: fix any stale localStorage entries ──────────────────────
 function migrateSchedule() {
-  // Patch 218.A on 2026-05-15 from '1-BED' → 'PARTIAL' if it was saved before the fix
-  const day = LIVE_SCHED.find(d => d.date === '2026-05-15');
-  if (day) {
-    let dirty = false;
-    day.units = day.units.map(u => {
+  let dirty = false;
+  // Patch 218.A on 2026-05-15 from '1-BED' → 'PARTIAL' if saved before the fix
+  const day515 = LIVE_SCHED.find(d => d.date === '2026-05-15');
+  if (day515) {
+    day515.units = day515.units.map(u => {
       if (u[0] === '218.A' && u[1] === '1-BED') { dirty = true; return ['218.A','PARTIAL','The Coda']; }
       return u;
     });
-    if (dirty) saveLiveSched();
   }
+  // Remove 407.A from 2026-05-14 entirely — it was done 5/12, 5/14 entry is a duplicate
+  const day514 = LIVE_SCHED.find(d => d.date === '2026-05-14');
+  if (day514) {
+    const before = day514.units.length;
+    day514.units = day514.units.filter(u => u[0] !== '407.A');
+    if (day514.units.length < before) dirty = true;
+  }
+  if (dirty) saveLiveSched();
 }
 
 function resetToOriginalSchedule() {
