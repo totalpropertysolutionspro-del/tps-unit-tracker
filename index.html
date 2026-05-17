@@ -203,22 +203,22 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <!-- TABS -->
 <div class="tabs">
   <div class="tab on" onclick="showTab('today')">Today</div>
-  <div class="tab" onclick="showTab('history')">History</div>
-  <div class="tab" onclick="showTab('summary')">Summary</div>
-  <div class="tab" onclick="showTab('units')">Units</div>
+  <div class="tab" onclick="showTab('schedule')">Schedule</div>
+  <div class="tab" onclick="showTab('earnings')">Earnings</div>
+  <div class="tab" onclick="showTab('manage')">Manage</div>
 </div>
 
 <!-- TODAY PANE -->
 <div class="pane on" id="pane-today"></div>
 
-<!-- HISTORY PANE -->
-<div class="pane" id="pane-history"></div>
+<!-- SCHEDULE PANE -->
+<div class="pane" id="pane-schedule"></div>
 
-<!-- SUMMARY PANE -->
-<div class="pane" id="pane-summary"></div>
+<!-- EARNINGS PANE -->
+<div class="pane" id="pane-earnings"></div>
 
-<!-- MANAGE UNITS PANE -->
-<div class="pane" id="pane-units"></div>
+<!-- MANAGE PANE -->
+<div class="pane" id="pane-manage"></div>
 
 <script>
 // ── HARDCODED SCHEDULE (source of truth — never mutated) ─────────────
@@ -404,7 +404,7 @@ function togglePartial(dateStr, unitNum) {
 
 // ── RENDER: MANAGE UNITS TAB ─────────────────────────────────────────
 function renderManageUnits() {
-  const pane = document.getElementById('pane-units');
+  const pane = document.getElementById('pane-manage');
 
   // Build addon lookup: "date|unit|building"
   const addonSet = new Set(ADDITIONAL_UNITS.map(u => u.cleanDate + '|' + u.unit + '|' + u.building));
@@ -574,7 +574,7 @@ let forecastMode = 'week';
 
 function setForecastMode(mode) {
   forecastMode = mode;
-  renderSummary();
+  renderSchedule();
 }
 
 function computeForecast() {
@@ -738,110 +738,9 @@ function renderToday() {
   pane.innerHTML = html;
 }
 
-// ── HISTORY PANE (uses LIVE_SCHED) ───────────────────────────────────
-function renderHistory() {
-  const t = todayStr();
-  const past = LIVE_SCHED.filter(d => d.date <= t).reverse();
-  const pane = document.getElementById('pane-history');
-  if (!past.length) { pane.innerHTML = '<div class="no-units"><div class="no-big">📭</div>No completed jobs yet.</div>'; return; }
-
-  const months = {};
-  for (const day of past) {
-    const mk = day.date.slice(0,7);
-    if (!months[mk]) months[mk] = [];
-    months[mk].push(day);
-  }
-
-  let html = '';
-  for (const [mk, days] of Object.entries(months).sort((a,b) => b[0] < a[0] ? -1 : 1)) {
-    const mEarn  = days.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
-    const mCount = days.reduce((a,d) => a + d.units.length, 0);
-    const mName  = new Date(mk+'-15').toLocaleDateString('en-US',{month:'long',year:'numeric'});
-    html += `<div class="hist-month">
-      <div class="month-hdr">
-        <div class="month-name">${mName}</div>
-        <div class="month-earn">${fmtMoney(mEarn)} · ${mCount} units</div>
-      </div>`;
-    for (const day of days) {
-      const earn = day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
-      const st   = dayStatus(day.date);
-      const dotColor = st === 'done' ? 'var(--green)' : 'var(--amber)';
-      const id = 'jd_' + day.date.replace(/-/g,'');
-      html += `<div class="job-day">
-        <div class="jd-header" onclick="toggleDay('${id}')">
-          <div class="jd-left">
-            <div class="jd-dot" style="background:${dotColor}"></div>
-            <div>
-              <div class="jd-date">${fmtDate(day.date)}</div>
-              <div class="jd-count">${day.units.length} unit${day.units.length!==1?'s':''} · ${st === 'done' ? '✅ Done' : '🔄 Today'}</div>
-            </div>
-          </div>
-          <div class="jd-right">
-            <div class="jd-earn" style="color:${st==='done'?'var(--green)':'var(--amber)'}">${fmtMoney(earn)}</div>
-            <div id="chev_${id}" class="jd-chevron">▼</div>
-          </div>
-        </div>
-        <div class="jd-units" id="${id}">
-          ${day.units.map(([u,type,bldg]) => `
-          <div class="unit-row">
-            <div class="ul">
-              <div class="uicon ${bldg==='The Coda'?'ic-coda':'ic-may'}">${bldg==='The Coda'?'🏙':'🏠'}</div>
-              <div><div class="unum">Unit ${u}</div><div class="utype">${type} · ${bldg}</div></div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:14px;font-weight:700;color:var(--green)">${fmtMoney(unitPrice(type))}</div>
-              <div style="font-size:10px;color:var(--dim)">${typeShort(type)}</div>
-            </div>
-          </div>`).join('')}
-          <div style="text-align:right;padding:8px 2px 4px;font-size:13px;font-weight:700;color:var(--green)">Day Total: ${fmtMoney(earn)}</div>
-        </div>
-      </div>`;
-    }
-    html += '</div>';
-  }
-  pane.innerHTML = html;
-}
-
-function toggleDay(id) {
-  const el   = document.getElementById(id);
-  const chev = document.getElementById('chev_' + id);
-  el.classList.toggle('open');
-  chev.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : '';
-}
-
-// ── SUMMARY PANE (uses LIVE_SCHED) ───────────────────────────────────
-function renderSummary() {
-  const pane = document.getElementById('pane-summary');
-  const totalSched = totalUnitsScheduled();
-  const {earn:ea, count:ca} = computeEarnings('all');
-  const remaining      = totalSched - ca;
-  const projectedTotal = LIVE_SCHED.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
-  const pct = totalSched > 0 ? Math.round((ca / totalSched) * 100) : 0;
-
-  // By building + partials
-  let codaDone = 0, mayDone = 0, codaTotal = 0, mayTotal = 0;
-  let partialsDone = 0, partialsTotal = 0;
-  const t = todayStr();
-  for (const day of LIVE_SCHED) {
-    const done = day.date <= t;
-    for (const [,type,bldg] of day.units) {
-      if (type === 'PARTIAL') { partialsTotal++; if(done) partialsDone++; }
-      if (bldg === 'The Coda') { codaTotal++; if(done) codaDone++; }
-      else { mayTotal++; if(done) mayDone++; }
-    }
-  }
-
-  // Monthly breakdown (completed only)
-  const byMonth = {};
-  for (const day of LIVE_SCHED) {
-    if (day.date > t) continue;
-    const mk = day.date.slice(0,7);
-    if (!byMonth[mk]) byMonth[mk] = {earn:0, count:0};
-    byMonth[mk].earn  += day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
-    byMonth[mk].count += day.units.length;
-  }
-
-  // Forecast section
+// ── SCHEDULE PANE (Day / Week / Month forecast — all dates) ──────────
+function renderSchedule() {
+  const pane = document.getElementById('pane-schedule');
   const fGroups = computeForecast();
   const fKeys   = Object.keys(fGroups).sort();
   const btnBase = 'border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;';
@@ -855,7 +754,6 @@ function renderSummary() {
     for (const k of fKeys) {
       const g = fGroups[k];
       const total = g.coda + g.may;
-      // Day mode: visually distinguish past vs today vs upcoming
       const isPast    = forecastMode === 'day' && g.isPast;
       const isToday   = forecastMode === 'day' && g.isToday;
       const cardOpacity  = isPast ? 'opacity:0.45;' : '';
@@ -888,10 +786,9 @@ function renderSummary() {
     }
   }
 
-  let html = `
-  <div class="sum-section">
+  pane.innerHTML = `<div class="sum-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="sum-title" style="margin:0">Forecast</div>
+      <div class="sum-title" style="margin:0">Schedule</div>
       <div style="display:flex;gap:6px">
         <button onclick="setForecastMode('day')" style="${forecastMode==='day'?btnOn:btnOff}">Day</button>
         <button onclick="setForecastMode('week')" style="${forecastMode==='week'?btnOn:btnOff}">Week</button>
@@ -899,8 +796,49 @@ function renderSummary() {
       </div>
     </div>
     ${fHtml}
-  </div>
+  </div>`;
+}
 
+function toggleDay(id) {
+  const el   = document.getElementById(id);
+  const chev = document.getElementById('chev_' + id);
+  el.classList.toggle('open');
+  chev.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+// ── EARNINGS PANE (uses LIVE_SCHED) ──────────────────────────────────
+function renderEarningsPane() {
+  const pane = document.getElementById('pane-earnings');
+  const totalSched = totalUnitsScheduled();
+  const {earn:ea, count:ca} = computeEarnings('all');
+  const remaining      = totalSched - ca;
+  const projectedTotal = LIVE_SCHED.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
+  const pct = totalSched > 0 ? Math.round((ca / totalSched) * 100) : 0;
+
+  // By building + partials
+  let codaDone = 0, mayDone = 0, codaTotal = 0, mayTotal = 0;
+  let partialsDone = 0, partialsTotal = 0;
+  const t = todayStr();
+  for (const day of LIVE_SCHED) {
+    const done = day.date <= t;
+    for (const [,type,bldg] of day.units) {
+      if (type === 'PARTIAL') { partialsTotal++; if(done) partialsDone++; }
+      if (bldg === 'The Coda') { codaTotal++; if(done) codaDone++; }
+      else { mayTotal++; if(done) mayDone++; }
+    }
+  }
+
+  // Monthly breakdown (completed only)
+  const byMonth = {};
+  for (const day of LIVE_SCHED) {
+    if (day.date > t) continue;
+    const mk = day.date.slice(0,7);
+    if (!byMonth[mk]) byMonth[mk] = {earn:0, count:0};
+    byMonth[mk].earn  += day.units.reduce((s, u) => s + unitPrice(u[1]), 0);
+    byMonth[mk].count += day.units.length;
+  }
+
+  let html = `
   <div class="sum-section">
     <div class="sum-title">Season Progress</div>
     <div class="sum-grid">
@@ -937,7 +875,7 @@ function renderSummary() {
   ${partialsTotal > 0 ? `<div class="sum-section">
     <div class="sum-title">Partial Cleans</div>
     <div class="job-day" style="margin-bottom:8px">
-      <div class="jd-header" style="cursor:pointer" onclick="showTab('units')">
+      <div class="jd-header" style="cursor:pointer" onclick="showTab('manage')">
         <div class="jd-left">
           <div class="jd-dot" style="background:var(--amber)"></div>
           <div>
@@ -977,7 +915,7 @@ function renderSummary() {
     html += `<div class="sum-section">
       <div class="sum-title">Add-On Units</div>
       <div class="job-day" style="margin-bottom:8px">
-        <div class="jd-header" style="cursor:pointer" onclick="showTab('units')">
+        <div class="jd-header" style="cursor:pointer" onclick="showTab('manage')">
           <div class="jd-left">
             <div class="jd-dot" style="background:var(--purple)"></div>
             <div>
@@ -998,7 +936,7 @@ function renderSummary() {
 
 // ── TABS ─────────────────────────────────────────────────────────────
 function showTab(name) {
-  const names = ['today','history','summary','units'];
+  const names = ['today','schedule','earnings','manage'];
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('on', names[i] === name);
   });
@@ -1017,8 +955,8 @@ function setFilter(f) {
 function renderAll() {
   renderEarnings();
   renderToday();
-  renderHistory();
-  renderSummary();
+  renderSchedule();
+  renderEarningsPane();
   renderManageUnits();
 }
 
