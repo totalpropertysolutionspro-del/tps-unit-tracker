@@ -145,6 +145,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .src-badge{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;white-space:nowrap}
 .src-sched{background:#3b82f618;color:var(--blue)}
 .src-addon{background:#a855f718;color:var(--purple)}
+.partial-badge{display:inline-block;font-size:9px;font-weight:800;border-radius:20px;padding:2px 7px;background:#f59e0b25;color:#f59e0b;border:1px solid #f59e0b50;letter-spacing:.4px;vertical-align:middle;margin-left:4px;white-space:nowrap}
 .del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:3px 7px;border-radius:6px;transition:background .15s;line-height:1}
 .del-btn:hover{background:#ef444420}
 .reset-link{text-align:center;padding:14px 0 4px;font-size:12px;color:var(--dim)}
@@ -220,7 +221,7 @@ const SCHED = [
   {date:'2026-05-12',units:[['407.A','1-BED','The Coda']]},
   {date:'2026-05-13',units:[['429.A','STUDIO','The Coda'],['609.A','STUDIO','The Coda'],['647.A','STUDIO','The Coda']]},
   {date:'2026-05-14',units:[['151.A','2-BED','The Coda'],['523.A','1-BED','The Coda'],['540.A','1-BED','The Coda'],['541.A','1-BED','The Coda']]},
-  {date:'2026-05-15',units:[['218.A','1-BED','The Coda'],['345.A','1-BED','The Coda']]},
+  {date:'2026-05-15',units:[['218.A','PARTIAL','The Coda'],['345.A','1-BED','The Coda']]},
   {date:'2026-05-18',units:[['641.A','1-BED','The Coda']]},
   {date:'2026-05-19',units:[['136.A','1-BED','The Coda'],['218.A','2-BED','The Coda'],['337.A','2-BED','The Coda'],['337.B','2-BED','The Coda'],['359.A','STUDIO','The Coda'],['436.A','STUDIO','The Coda'],['532.A','2-BED','The Coda'],['532.B','2-BED','The Coda'],['534.A','1-BED','The Coda'],['501.A','2-BED/1-BATH','Mayflower'],['501.B','2-BED/1-BATH','Mayflower']]},
   {date:'2026-05-20',units:[['246.A','STUDIO','The Coda'],['502.A','1-BED/1-BATH','Mayflower']]},
@@ -261,6 +262,20 @@ function saveLiveSched() {
   try { localStorage.setItem('tps_sched_overrides', JSON.stringify(LIVE_SCHED)); } catch(e) {}
 }
 
+// ── MIGRATE: fix any stale localStorage entries ──────────────────────
+function migrateSchedule() {
+  // Patch 218.A on 2026-05-15 from '1-BED' → 'PARTIAL' if it was saved before the fix
+  const day = LIVE_SCHED.find(d => d.date === '2026-05-15');
+  if (day) {
+    let dirty = false;
+    day.units = day.units.map(u => {
+      if (u[0] === '218.A' && u[1] === '1-BED') { dirty = true; return ['218.A','PARTIAL','The Coda']; }
+      return u;
+    });
+    if (dirty) saveLiveSched();
+  }
+}
+
 function resetToOriginalSchedule() {
   if (!confirm('Reset to original schedule?\n\nAll manual deletions will be restored. Manually added units will remain in your Add-On log.')) return;
   localStorage.removeItem('tps_sched_overrides');
@@ -283,14 +298,19 @@ function saveAdditional() {
 }
 
 // ── TYPE DROPDOWNS ───────────────────────────────────────────────────
-const CODA_TYPES = ['STUDIO','1-BED','2-BED','3-BED'];
+const CODA_TYPES = ['STUDIO','1-BED','2-BED','3-BED','PARTIAL'];
 const MAY_TYPES  = ['STUDIO','1-BED/1-BATH','2-BED/1-BATH','2-BED/2-BATH','3-BED/2-BATH','4-BED/3-BATH'];
+
+function typeLabel(t) {
+  if (t === 'PARTIAL') return 'Partial (1BD/1BA) — $85';
+  return t;
+}
 
 function updateTypeDropdown() {
   const bldg = document.getElementById('af-bldg').value;
   const types = bldg === 'The Coda' ? CODA_TYPES : MAY_TYPES;
   const sel = document.getElementById('af-type');
-  sel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.innerHTML = types.map(t => `<option value="${t}">${typeLabel(t)}</option>`).join('');
 }
 
 // ── ADD UNIT ─────────────────────────────────────────────────────────
@@ -395,14 +415,17 @@ function renderManageUnits() {
         const bldgColor = u.building === 'The Coda' ? 'var(--blue)' : 'var(--amber)';
         const srcClass  = u.isAddon ? 'src-addon' : 'src-sched';
         const srcLabel  = u.isAddon ? 'Add-On' : 'Schedule';
+        const typeCell = u.type === 'PARTIAL'
+          ? `<span style="color:var(--dim);font-size:12px">PARTIAL</span><span class="partial-badge">PARTIAL</span>`
+          : `<span style="color:var(--dim);font-size:12px;white-space:nowrap">${u.type}</span>`;
         rows += `<tr>
           <td style="font-weight:600;white-space:nowrap;font-size:12px">${fmtDate(u.date)}</td>
           <td style="color:${bldgColor};font-weight:700;white-space:nowrap">${u.building}</td>
           <td style="text-align:center;color:var(--dim);font-weight:700">${u.floor}</td>
           <td style="font-weight:800">${u.unitNum}</td>
-          <td style="color:var(--dim);font-size:12px;white-space:nowrap">${u.type}</td>
+          <td>${typeCell}</td>
           <td class="col-source"><span class="src-badge ${srcClass}">${srcLabel}</span></td>
-          <td style="color:var(--green);font-weight:700;white-space:nowrap">${fmtMoney(u.earnings)}</td>
+          <td style="color:${u.type==='PARTIAL'?'var(--amber)':'var(--green)'};font-weight:700;white-space:nowrap">${fmtMoney(u.earnings)}</td>
           <td><button class="del-btn" onclick="deleteUnit('${u.date}','${u.unitNum}')">✕</button></td>
         </tr>`;
       }
@@ -418,6 +441,35 @@ function renderManageUnits() {
           <td colspan="6" style="text-align:right;font-weight:700;color:var(--dim)">Total — ${allUnits.length} units</td>
           <td style="font-weight:800;color:var(--gold)">${fmtMoney(totalAll)}</td>
           <td></td>
+        </tr></tfoot>
+      </table>
+    </div>`;
+  }
+
+  // ── Partials subsection ──────────────────────────────────────────────
+  const partialUnits = allUnits.filter(u => u.type === 'PARTIAL');
+  let partialsSection = '';
+  if (partialUnits.length > 0) {
+    const partialRows = partialUnits.map(u => {
+      const bldgColor = u.building === 'The Coda' ? 'var(--blue)' : 'var(--amber)';
+      return `<tr>
+        <td style="font-weight:600;white-space:nowrap;font-size:12px">${fmtDate(u.date)}</td>
+        <td style="color:${bldgColor};font-weight:700;white-space:nowrap">${u.building}</td>
+        <td style="font-weight:800">${u.unitNum}</td>
+        <td><span class="partial-badge">PARTIAL</span></td>
+        <td style="color:var(--amber);font-weight:700">$85</td>
+      </tr>`;
+    }).join('');
+    partialsSection = `<div class="mu-tab-header" style="margin-top:24px">🟠 Partials — Quick Reference</div>
+    <div class="mu-table-wrap">
+      <table class="mu-table">
+        <thead><tr>
+          <th>Date</th><th>Building</th><th>Unit #</th><th>Type</th><th>Earnings</th>
+        </tr></thead>
+        <tbody>${partialRows}</tbody>
+        <tfoot><tr>
+          <td colspan="4" style="text-align:right;font-weight:700;color:var(--dim)">${partialUnits.length} partial${partialUnits.length!==1?'s':''} total</td>
+          <td style="font-weight:800;color:var(--amber)">${fmtMoney(partialUnits.length * 85)}</td>
         </tr></tfoot>
       </table>
     </div>`;
@@ -446,7 +498,7 @@ function renderManageUnits() {
       <div class="aff">
         <label>Type</label>
         <select id="af-type">
-          ${CODA_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
+          ${CODA_TYPES.map(t => `<option value="${t}">${typeLabel(t)}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -462,13 +514,14 @@ function renderManageUnits() {
     <a onclick="resetToOriginalSchedule()">↺ Reset to original schedule</a>
   </div>`;
 
-  pane.innerHTML = `<div class="mu-tab-header">All Units — Master List</div>` + masterList + formHtml;
+  pane.innerHTML = `<div class="mu-tab-header">All Units — Master List</div>` + masterList + partialsSection + formHtml;
 }
 
 // ── PRICING ──────────────────────────────────────────────────────────
-// 1BR / Studio = $195 | 2BR = $220 | 3BR = $245 | 4BR (Mayflower) = $300
+// PARTIAL = $85 | 1BR / Studio = $195 | 2BR = $220 | 3BR = $245 | 4BR (Mayflower) = $300
 function unitPrice(type) {
   if (!type) return 195;
+  if (type === 'PARTIAL') return 85;
   if (type.startsWith('4')) return 300;
   if (type.startsWith('3')) return 245;
   if (type.startsWith('2')) return 220;
@@ -531,6 +584,7 @@ function fmtMoney(n) { return '$' + n.toLocaleString(); }
 function typeShort(t) {
   if (!t) return '';
   if (t === 'STUDIO') return 'STU';
+  if (t === 'PARTIAL') return 'PART';
   const m = t.match(/^(\d)-BED/);
   return m ? m[1]+'B' : t.split('/')[0];
 }
@@ -703,12 +757,14 @@ function renderSummary() {
   const projectedTotal = LIVE_SCHED.reduce((a,d) => a + d.units.reduce((s,u)=>s+unitPrice(u[1]),0), 0);
   const pct = totalSched > 0 ? Math.round((ca / totalSched) * 100) : 0;
 
-  // By building
+  // By building + partials
   let codaDone = 0, mayDone = 0, codaTotal = 0, mayTotal = 0;
+  let partialsDone = 0, partialsTotal = 0;
   const t = todayStr();
   for (const day of LIVE_SCHED) {
     const done = day.date <= t;
-    for (const [,,bldg] of day.units) {
+    for (const [,type,bldg] of day.units) {
+      if (type === 'PARTIAL') { partialsTotal++; if(done) partialsDone++; }
       if (bldg === 'The Coda') { codaTotal++; if(done) codaDone++; }
       else { mayTotal++; if(done) mayDone++; }
     }
@@ -798,7 +854,27 @@ function renderSummary() {
         <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${mayTotal>0?Math.round(mayDone/mayTotal*100):0}%;background:var(--amber)"></div></div>
       </div>
     </div>
-  </div>`;
+  </div>
+
+  ${partialsTotal > 0 ? `<div class="sum-section">
+    <div class="sum-title">Partial Cleans</div>
+    <div class="job-day" style="margin-bottom:8px">
+      <div class="jd-header" style="cursor:pointer" onclick="showTab('units')">
+        <div class="jd-left">
+          <div class="jd-dot" style="background:var(--amber)"></div>
+          <div>
+            <div class="jd-date">Partial Cleans <span class="partial-badge" style="font-size:10px">PARTIAL</span></div>
+            <div class="jd-count" style="margin-top:3px">1BD/1BA only · $85 each · <span style="color:var(--blue)">tap to view →</span></div>
+          </div>
+        </div>
+        <div class="jd-right">
+          <div style="font-size:17px;font-weight:800;color:var(--amber)">${fmtMoney(partialsDone * 85)}</div>
+          <div class="jd-count">${partialsDone} completed · ${partialsTotal - partialsDone} upcoming</div>
+        </div>
+      </div>
+    </div>
+  </div>` : ''}
+`;
 
   if (Object.keys(byMonth).length > 0) {
     html += `<div class="sum-section"><div class="sum-title">Monthly Breakdown</div>`;
@@ -871,6 +947,7 @@ function renderAll() {
 // ── INIT ─────────────────────────────────────────────────────────────
 function init() {
   loadLiveSched();
+  migrateSchedule();
   const now = new Date();
   document.getElementById('hdrDate').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   renderAll();
