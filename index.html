@@ -218,7 +218,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 // ── HARDCODED SCHEDULE (source of truth — never mutated) ─────────────
 const SCHED = [
   {date:'2026-05-06',units:[['519.A','1-BED','The Coda']]},
-  {date:'2026-05-12',units:[['407.A','1-BED','The Coda']]},
   {date:'2026-05-13',units:[['429.A','STUDIO','The Coda'],['609.A','STUDIO','The Coda'],['647.A','STUDIO','The Coda']]},
   {date:'2026-05-14',units:[['151.A','2-BED','The Coda'],['523.A','1-BED','The Coda'],['540.A','1-BED','The Coda'],['541.A','1-BED','The Coda']]},
   {date:'2026-05-15',units:[['218.A','PARTIAL','The Coda'],['345.A','1-BED','The Coda']]},
@@ -273,12 +272,11 @@ function migrateSchedule() {
       return u;
     });
   }
-  // Remove 407.A from 2026-05-14 entirely — it was done 5/12, 5/14 entry is a duplicate
-  const day514 = LIVE_SCHED.find(d => d.date === '2026-05-14');
-  if (day514) {
-    const before = day514.units.length;
-    day514.units = day514.units.filter(u => u[0] !== '407.A');
-    if (day514.units.length < before) dirty = true;
+  // Remove 407.A from ALL dates — unit was never completed, wiped from schedule entirely
+  for (const day of LIVE_SCHED) {
+    const before = day.units.length;
+    day.units = day.units.filter(u => u[0] !== '407.A');
+    if (day.units.length < before) dirty = true;
   }
   // Remove 501.A and 501.B from 2026-05-19 — Mayflower phantom entries, not on official schedule
   const day519 = LIVE_SCHED.find(d => d.date === '2026-05-19');
