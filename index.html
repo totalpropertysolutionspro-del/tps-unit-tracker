@@ -944,8 +944,60 @@ function renderAll() {
   renderManageUnits();
 }
 
+// ── DEDUPLICATION ────────────────────────────────────────────────────
+function deduplicateSchedule() {
+  // — Deduplicate tps_sched_overrides —
+  try {
+    const raw = localStorage.getItem('tps_sched_overrides');
+    if (raw) {
+      const sched = JSON.parse(raw);
+      const seen = new Set();
+      let removed = 0;
+      // Sort dates ascending so we keep the earliest occurrence
+      const sorted = [...sched].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      for (const day of sorted) {
+        const before = day.units.length;
+        day.units = day.units.filter(([unit, , building]) => {
+          const key = unit + '|' + building;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        removed += before - day.units.length;
+      }
+      // Remove date entries that are now empty
+      const cleaned = sorted.filter(day => day.units.length > 0);
+      if (removed > 0) {
+        localStorage.setItem('tps_sched_overrides', JSON.stringify(cleaned));
+        console.log('Dedup removed ' + removed + ' entr' + (removed === 1 ? 'y' : 'ies') + ' from tps_sched_overrides');
+      }
+    }
+  } catch(e) { console.warn('dedup sched error:', e); }
+
+  // — Deduplicate tps_additional_units —
+  try {
+    const raw = localStorage.getItem('tps_additional_units');
+    if (raw) {
+      const units = JSON.parse(raw);
+      const seen = new Set();
+      let removed = 0;
+      const cleaned = units.filter(u => {
+        const key = u.unit + '|' + u.building;
+        if (seen.has(key)) { removed++; return false; }
+        seen.add(key);
+        return true;
+      });
+      if (removed > 0) {
+        localStorage.setItem('tps_additional_units', JSON.stringify(cleaned));
+        console.log('Dedup removed ' + removed + ' entr' + (removed === 1 ? 'y' : 'ies') + ' from tps_additional_units');
+      }
+    }
+  } catch(e) { console.warn('dedup additional error:', e); }
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────
 function init() {
+  deduplicateSchedule();
   loadLiveSched();
   migrateSchedule();
   const now = new Date();
