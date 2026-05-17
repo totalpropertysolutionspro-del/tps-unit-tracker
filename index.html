@@ -117,6 +117,27 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .progress-fill{height:100%;border-radius:6px;transition:width 1s ease}
 
 @media(min-width:500px){.earn-row{grid-template-columns:1fr 1fr 1fr}}
+
+/* ── ADDITIONAL UNITS ── */
+.add-section-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.add-table-wrap{overflow-x:auto;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:14px}
+.add-table{width:100%;border-collapse:collapse;font-size:13px}
+.add-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);padding:11px 13px;border-bottom:1px solid var(--border);white-space:nowrap}
+.add-table td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.add-table tbody tr:nth-child(even) td{background:#ffffff03}
+.add-table tbody tr:last-child td{border-bottom:none}
+.add-table tfoot td{border-top:1px solid var(--border);border-bottom:none}
+.add-form{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px}
+.add-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.add-form-full{margin-bottom:10px}
+.aff{display:flex;flex-direction:column;gap:5px}
+.aff label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+.aff input,.aff select{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;width:100%;-webkit-appearance:none}
+.aff input:focus,.aff select:focus{border-color:var(--gold)}
+.add-btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;letter-spacing:-.3px;transition:opacity .15s}
+.add-btn:active{opacity:.75}
+.no-add{text-align:center;padding:32px 20px;color:var(--dim);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px}
+@media(max-width:499px){.add-form-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -163,6 +184,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div class="tab on" onclick="showTab('today')">Today</div>
   <div class="tab" onclick="showTab('history')">History</div>
   <div class="tab" onclick="showTab('summary')">Summary</div>
+  <div class="tab" onclick="showTab('additional')">Add-On</div>
 </div>
 
 <!-- TODAY PANE -->
@@ -173,6 +195,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <!-- SUMMARY PANE -->
 <div class="pane" id="pane-summary"></div>
+
+<!-- ADDITIONAL UNITS PANE -->
+<div class="pane" id="pane-additional"></div>
 
 <script>
 // ── SCHEDULE DATA ────────────────────────────────────────────────────
@@ -199,6 +224,129 @@ const SCHED = [
   {date:'2026-08-05',units:[['624.A','STUDIO','The Coda'],['626.A','2-BED','The Coda'],['626.B','2-BED','The Coda'],['630.A','2-BED','The Coda']]},
   {date:'2026-08-12',units:[['422.A','2-BED','The Coda'],['422.B','2-BED','The Coda'],['561.A','1-BED','The Coda']]}
 ];
+
+// ── ADDITIONAL UNITS ─────────────────────────────────────────────────
+let ADDITIONAL_UNITS = [];
+(function loadAdditional() {
+  try {
+    const saved = localStorage.getItem('tps_additional_units');
+    if (saved) ADDITIONAL_UNITS = JSON.parse(saved);
+  } catch(e) {}
+})();
+
+function saveAdditional() {
+  try { localStorage.setItem('tps_additional_units', JSON.stringify(ADDITIONAL_UNITS)); } catch(e) {}
+}
+
+const CODA_TYPES = ['STUDIO','1-BED','2-BED','3-BED'];
+const MAY_TYPES  = ['STUDIO','1-BED/1-BATH','2-BED/1-BATH','2-BED/2-BATH','3-BED/2-BATH','4-BED/3-BATH'];
+
+function updateTypeDropdown() {
+  const bldg = document.getElementById('af-bldg').value;
+  const types = bldg === 'The Coda' ? CODA_TYPES : MAY_TYPES;
+  const sel = document.getElementById('af-type');
+  sel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function addAdditionalUnit() {
+  const cleanDate = document.getElementById('af-date').value;
+  const bldg     = document.getElementById('af-bldg').value;
+  const unit      = document.getElementById('af-unit').value.trim();
+  const type      = document.getElementById('af-type').value;
+  const notes     = document.getElementById('af-notes').value.trim();
+  if (!cleanDate || !unit) { alert('Fill in Clean Date and Unit # to continue.'); return; }
+  ADDITIONAL_UNITS.push({ dateAdded: todayStr(), cleanDate, building: bldg, unit, type, notes });
+  saveAdditional();
+  document.getElementById('af-unit').value  = '';
+  document.getElementById('af-notes').value = '';
+  renderAdditional();
+  renderSummary(); // refresh Additional Units total in summary
+}
+
+function deleteAdditionalUnit(idx) {
+  if (!confirm('Remove this entry?')) return;
+  ADDITIONAL_UNITS.splice(idx, 1);
+  saveAdditional();
+  renderAdditional();
+  renderSummary();
+}
+
+function renderAdditional() {
+  const pane = document.getElementById('pane-additional');
+  const sorted = [...ADDITIONAL_UNITS]
+    .map((u, origIdx) => ({...u, origIdx}))
+    .sort((a,b) => a.cleanDate < b.cleanDate ? -1 : a.cleanDate > b.cleanDate ? 1 : 0);
+
+  let tableHtml = '';
+  if (sorted.length === 0) {
+    tableHtml = '<div class="no-add">No additional units logged yet.<br>Use the form below to add one.</div>';
+  } else {
+    const total = ADDITIONAL_UNITS.reduce((s, u) => s + unitPrice(u.type), 0);
+    tableHtml = `<div class="add-table-wrap">
+      <table class="add-table">
+        <thead><tr>
+          <th>Date Added</th><th>Clean Date</th><th>Building</th>
+          <th>Unit #</th><th>Type</th><th>Notes</th><th>Earnings</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map(u => `<tr>
+            <td style="color:var(--dim);font-size:12px">${fmtDate(u.dateAdded)}</td>
+            <td style="font-weight:700">${fmtDate(u.cleanDate)}</td>
+            <td style="color:${u.building==='The Coda'?'var(--blue)':'var(--amber)'};font-weight:700">${u.building}</td>
+            <td style="font-weight:700">${u.unit}</td>
+            <td style="color:var(--dim)">${u.type}</td>
+            <td style="color:var(--dim);font-size:12px">${u.notes||'—'}</td>
+            <td style="color:var(--green);font-weight:700">${fmtMoney(unitPrice(u.type))}</td>
+            <td><span onclick="deleteAdditionalUnit(${u.origIdx})" style="cursor:pointer;color:var(--red);font-size:16px;line-height:1" title="Remove">✕</span></td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="6" style="text-align:right;font-weight:700;color:var(--dim)">Total</td>
+          <td style="font-weight:800;color:var(--gold)">${fmtMoney(total)}</td>
+          <td></td>
+        </tr></tfoot>
+      </table>
+    </div>`;
+  }
+
+  const formHtml = `<div class="add-form">
+    <div class="add-section-title">➕ Log Additional Unit</div>
+    <div class="add-form-row">
+      <div class="aff">
+        <label>Clean Date</label>
+        <input type="date" id="af-date">
+      </div>
+      <div class="aff">
+        <label>Building</label>
+        <select id="af-bldg" onchange="updateTypeDropdown()">
+          <option value="The Coda">The Coda</option>
+          <option value="Mayflower">Mayflower</option>
+        </select>
+      </div>
+    </div>
+    <div class="add-form-row">
+      <div class="aff">
+        <label>Unit #</label>
+        <input type="text" id="af-unit" placeholder="e.g. 532.A">
+      </div>
+      <div class="aff">
+        <label>Type</label>
+        <select id="af-type">
+          ${CODA_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="add-form-full">
+      <div class="aff">
+        <label>Notes (optional)</label>
+        <input type="text" id="af-notes" placeholder="Any extra context...">
+      </div>
+    </div>
+    <button class="add-btn" onclick="addAdditionalUnit()">Add Unit</button>
+  </div>`;
+
+  pane.innerHTML = tableHtml + formHtml;
+}
 
 // ── PRICING (per signed contract Cleaning.scope_contractor_MR26) ────
 // 1BR / Studio = $195 | 2BR = $220 | 3BR = $245 | 4BR (Mayflower) = $300
@@ -555,13 +703,39 @@ function renderSummary() {
     html += `</div>`;
   }
 
+  // ── Additional Units row ──
+  const addTotal = ADDITIONAL_UNITS.reduce((s, u) => s + unitPrice(u.type), 0);
+  const addCount = ADDITIONAL_UNITS.length;
+  const grandTotal = ea + addTotal;
+  html += `<div class="sum-section">
+    <div class="sum-title">Additional Units</div>
+    <div class="job-day" style="margin-bottom:8px">
+      <div class="jd-header" style="cursor:default" onclick="showTab('additional')">
+        <div class="jd-left">
+          <div class="jd-dot" style="background:var(--purple)"></div>
+          <div>
+            <div class="jd-date">Ad-Hoc / Add-On Units</div>
+            <div class="jd-count">${addCount} unit${addCount!==1?'s':''} manually logged · <span style="color:var(--blue)">tap to manage →</span></div>
+          </div>
+        </div>
+        <div class="jd-right">
+          <div class="jd-earn" style="color:var(--purple)">${fmtMoney(addTotal)}</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;font-weight:600;color:var(--dim)">Grand Total (Schedule + Add-Ons)</div>
+      <div style="font-size:20px;font-weight:800;color:var(--gold)">${fmtMoney(grandTotal)}</div>
+    </div>
+  </div>`;
+
   pane.innerHTML = html;
 }
 
 // ── TABS & FILTERS ──────────────────────────────────────────────────
 function showTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('on', ['today','history','summary'][i] === name);
+    t.classList.toggle('on', ['today','history','summary','additional'][i] === name);
   });
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
   document.getElementById('pane-'+name).classList.add('on');
@@ -582,6 +756,7 @@ function init() {
   renderToday();
   renderHistory();
   renderSummary();
+  renderAdditional();
 }
 
 init();
