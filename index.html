@@ -555,7 +555,11 @@ function computeForecast() {
   const groups = {};
   for (const day of upcoming) {
     let key, label;
-    if (forecastMode === 'week') {
+    if (forecastMode === 'day') {
+      key = day.date;
+      const dt = new Date(day.date + 'T12:00:00');
+      label = dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    } else if (forecastMode === 'week') {
       const dt = new Date(day.date + 'T12:00:00');
       const dow = (dt.getDay() + 6) % 7;
       const mon = new Date(dt); mon.setDate(dt.getDate() - dow);
@@ -836,6 +840,7 @@ function renderSummary() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div class="sum-title" style="margin:0">Forecast</div>
       <div style="display:flex;gap:6px">
+        <button onclick="setForecastMode('day')" style="${forecastMode==='day'?btnOn:btnOff}">Day</button>
         <button onclick="setForecastMode('week')" style="${forecastMode==='week'?btnOn:btnOff}">Week</button>
         <button onclick="setForecastMode('month')" style="${forecastMode==='month'?btnOn:btnOff}">Month</button>
       </div>
